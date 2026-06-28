@@ -10,6 +10,8 @@ export interface Workflow {
   updatedAt: string
   lastRunAt: string | null
   runCount: number
+  agentIds: string[]
+  businessValue: string
 }
 
 export interface WorkflowStep {

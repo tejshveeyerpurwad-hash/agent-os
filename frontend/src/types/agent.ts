@@ -3,22 +3,19 @@ export type AgentStatus = 'idle' | 'running' | 'paused' | 'error' | 'completed'
 export interface Agent {
   id: string
   name: string
+  role: string
   description: string
   status: AgentStatus
   model: string
   capabilities: string[]
-  createdAt: string
-  updatedAt: string
-  lastRunAt: string | null
+  confidence: number
+  currentTask: string | null
+  lastAction: string
   taskCount: number
   successRate: number
-}
-
-export interface AgentConfig {
-  temperature: number
-  maxTokens: number
-  systemPrompt: string
-  tools: string[]
+  color: string
+  icon: string
+  createdAt: string
 }
 
 export interface AgentLog {

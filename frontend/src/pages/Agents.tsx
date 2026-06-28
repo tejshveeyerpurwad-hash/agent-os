@@ -1,62 +1,194 @@
 import { useState } from 'react'
-import { Plus, Search, SlidersHorizontal } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { AgentCard } from '@/components/agents/AgentCard'
-import type { Agent } from '@/types/agent'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Bot, Search, Play, Pause, RotateCcw, Loader2, CheckCircle2, XCircle, Clock, Brain, Activity, Zap, BarChart3, ChevronDown, ChevronUp, Terminal, AlertCircle } from 'lucide-react'
+import { cn } from '@/utils/cn'
+import { useAgentsStore, type AgentState } from '@/store/agentsStore'
+import { useExecutionEngine } from '@/store/executionEngine'
 
-const placeholderAgents: Agent[] = [
-  { id: '1', name: 'DataAnalysisAgent', description: 'Analyzes and extracts insights from structured and unstructured datasets using statistical models.', status: 'running', model: 'gpt-4', capabilities: ['analysis', 'reporting'], createdAt: '2024-01-01', updatedAt: '2024-01-01', lastRunAt: '2024-01-01', taskCount: 847, successRate: 94 },
-  { id: '2', name: 'ContentGenerator', description: 'Creates and optimizes marketing content, blog posts, and social media copy.', status: 'idle', model: 'gpt-4', capabilities: ['writing', 'optimization'], createdAt: '2024-01-01', updatedAt: '2024-01-01', lastRunAt: null, taskCount: 1234, successRate: 97 },
-  { id: '3', name: 'SentimentAnalyzer', description: 'Monitors brand sentiment across social media platforms and customer feedback channels.', status: 'running', model: 'claude-3', capabilities: ['nlp', 'monitoring'], createdAt: '2024-01-01', updatedAt: '2024-01-01', lastRunAt: '2024-01-01', taskCount: 2501, successRate: 91 },
-  { id: '4', name: 'CustomerSupportBot', description: 'Handles customer inquiries, ticket routing, and automated responses.', status: 'paused', model: 'gpt-4', capabilities: ['support', 'routing'], createdAt: '2024-01-01', updatedAt: '2024-01-01', lastRunAt: null, taskCount: 5632, successRate: 88 },
-  { id: '5', name: 'DataEnrichmentAgent', description: 'Enriches customer records with external data sources and cleanses existing data.', status: 'error', model: 'claude-3', capabilities: ['enrichment', 'cleaning'], createdAt: '2024-01-01', updatedAt: '2024-01-01', lastRunAt: '2024-01-01', taskCount: 423, successRate: 76 },
-  { id: '6', name: 'ReportGenerator', description: 'Generates automated business reports and executive summaries from raw data.', status: 'idle', model: 'gpt-4', capabilities: ['reporting', 'visualization'], createdAt: '2024-01-01', updatedAt: '2024-01-01', lastRunAt: null, taskCount: 312, successRate: 99 },
+const agentsList = [
+  { id: 'agent-ceo', name: 'CEOArya', role: 'CEO Agent', color: 'from-blue-500/20 to-blue-600/10 border-blue-500/20', textColor: 'text-blue-400', description: 'Strategic decision-making, executive summaries, market intelligence, and board-level reporting.' },
+  { id: 'agent-hr', name: 'HRBot', role: 'HR Agent', color: 'from-emerald-500/20 to-emerald-600/10 border-emerald-500/20', textColor: 'text-emerald-400', description: 'Talent acquisition, employee engagement, performance reviews, and organizational development.' },
+  { id: 'agent-finance', name: 'FinanceAI', role: 'Finance Agent', color: 'from-amber-500/20 to-amber-600/10 border-amber-500/20', textColor: 'text-amber-400', description: 'Financial analysis, forecasting, budget optimization, invoicing, and compliance monitoring.' },
+  { id: 'agent-sales', name: 'SalesPro', role: 'Sales Agent', color: 'from-violet-500/20 to-violet-600/10 border-violet-500/20', textColor: 'text-violet-400', description: 'Lead scoring, pipeline management, deal negotiation, and revenue forecasting.' },
+  { id: 'agent-marketing', name: 'MarketGenius', role: 'Marketing Agent', color: 'from-pink-500/20 to-pink-600/10 border-pink-500/20', textColor: 'text-pink-400', description: 'Campaign optimization, audience segmentation, content strategy, and analytics.' },
+  { id: 'agent-ops', name: 'OpsBot', role: 'Operations Agent', color: 'from-cyan-500/20 to-cyan-600/10 border-cyan-500/20', textColor: 'text-cyan-400', description: 'Process optimization, resource allocation, workflow automation, and scheduling.' },
+  { id: 'agent-legal', name: 'LegalShield', role: 'Legal Agent', color: 'from-red-500/20 to-red-600/10 border-red-500/20', textColor: 'text-red-400', description: 'Contract review, compliance monitoring, risk assessment, and IP protection.' },
+  { id: 'agent-support', name: 'SupportBot', role: 'Support Agent', color: 'from-indigo-500/20 to-indigo-600/10 border-indigo-500/20', textColor: 'text-indigo-400', description: 'Ticket routing, knowledge base retrieval, sentiment analysis, and automated resolution.' },
 ]
 
 export function Agents() {
-  const [searchQuery, setSearchQuery] = useState('')
+  const agents = useAgentsStore(s => s.agents)
+  const executeTask = useAgentsStore(s => s.executeTask)
+  const [search, setSearch] = useState('')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [runningTask, setRunningTask] = useState<string | null>(null)
 
-  const filteredAgents = placeholderAgents.filter(
-    (agent) => agent.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filtered = agentsList.filter(a =>
+    a.name.toLowerCase().includes(search.toLowerCase()) ||
+    a.role.toLowerCase().includes(search.toLowerCase())
   )
+
+  async function runDemoTask(agentId: string) {
+    setRunningTask(agentId)
+    const agent = agents.find(a => a.id === agentId)
+    const demo = agentTasks[agentId] || 'Process assigned business task'
+    await executeTask(agentId, demo)
+    setRunningTask(null)
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-heading-xl font-bold text-dark-100">Agents</h1>
-          <p className="text-dark-400 mt-1">Manage your AI agents and their capabilities.</p>
-        </div>
-        <Button leftIcon={<Plus className="h-4 w-4" />}>Create Agent</Button>
+    <div className="p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
+      <div>
+        <h1 className="text-xl lg:text-2xl font-bold text-dark-100 tracking-tight">AI Agents</h1>
+        <p className="text-sm text-dark-400 mt-0.5">Eight specialized business agents with autonomous execution capabilities</p>
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-500" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search agents..."
-            className="w-full pl-9 pr-4 py-2 rounded-lg bg-dark-800 border border-dark-700 text-sm text-dark-200 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500"
-          />
-        </div>
-        <Button variant="outline" size="sm" leftIcon={<SlidersHorizontal className="h-4 w-4" />}>
-          Filters
-        </Button>
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-500" />
+        <input value={search} onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search agents..."
+          className="w-full pl-9 pr-3 py-2 rounded-lg bg-dark-800/50 border border-dark-700 text-sm text-dark-200 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filteredAgents.map((agent, i) => (
-          <AgentCard key={agent.id} agent={agent} index={i} />
-        ))}
-      </div>
+      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {filtered.map((meta, i) => {
+          const state = agents.find(a => a.id === meta.id)!
+          const isExpanded = expandedId === meta.id
+          const isRunning = runningTask === meta.id
 
-      {filteredAgents.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-dark-400">No agents found matching your search.</p>
-        </div>
-      )}
+          return (
+            <motion.div
+              key={meta.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.04 }}
+              className={cn('rounded-xl border bg-dark-900/50 overflow-hidden transition-all duration-200', meta.color)}
+            >
+              <div className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className={cn('w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center', meta.color.replace('border-', ''))}>
+                      <Bot className={cn('h-5 w-5', meta.textColor)} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-dark-100">{meta.name}</p>
+                      <p className="text-[11px] text-dark-500">{meta.role}</p>
+                    </div>
+                  </div>
+                  <div className={cn(
+                    'w-2.5 h-2.5 rounded-full border-2 border-dark-900',
+                    state.status === 'running' ? 'bg-emerald-400 animate-pulse' :
+                    state.status === 'idle' ? 'bg-dark-500' :
+                    state.status === 'paused' ? 'bg-amber-400' :
+                    state.status === 'error' ? 'bg-red-400' :
+                    'bg-dark-500',
+                  )} />
+                </div>
+
+                <p className="text-[11px] text-dark-400 leading-relaxed mb-3 line-clamp-2">{meta.description}</p>
+
+                {state.currentTask && (
+                  <div className="flex items-center gap-1.5 mb-2 px-2 py-1.5 rounded bg-dark-800/50">
+                    <Loader2 className="h-3 w-3 animate-spin text-primary-400 shrink-0" />
+                    <span className="text-[10px] text-dark-400">{state.currentTask}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 text-xs">
+                  <div className="flex-1">
+                    <div className="flex justify-between text-[10px] mb-1">
+                      <span className="text-dark-500">Confidence</span>
+                      <span className="text-dark-300 font-medium">{state.confidence}%</span>
+                    </div>
+                    <div className="h-1.5 bg-dark-800 rounded-full overflow-hidden">
+                      <div className={cn('h-full rounded-full transition-all duration-500', meta.textColor.replace('text-', 'bg-').replace('400', '400'))} style={{ width: `${state.confidence}%` }} />
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-semibold text-dark-200">{state.successRate}%</p>
+                    <p className="text-[10px] text-dark-500">success</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-semibold text-dark-200">{state.taskCount}</p>
+                    <p className="text-[10px] text-dark-500">tasks</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-4 pb-4 flex items-center gap-2">
+                <button
+                  onClick={() => runDemoTask(meta.id)}
+                  disabled={isRunning || state.status === 'running'}
+                  className={cn(
+                    'flex-1 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all',
+                    isRunning ? 'bg-dark-800 text-dark-500 cursor-not-allowed' :
+                    'bg-dark-800 text-dark-300 hover:bg-dark-700 hover:text-dark-100',
+                  )}
+                >
+                  {isRunning ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Play className="h-3.5 w-3.5" />
+                  )}
+                  {isRunning ? 'Executing...' : 'Execute'}
+                </button>
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : meta.id)}
+                  className="p-1.5 rounded-lg text-dark-500 hover:text-dark-300 hover:bg-dark-800 transition-colors"
+                >
+                  {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+              </div>
+
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }}
+                    className="overflow-hidden border-t border-dark-800"
+                  >
+                    <div className="p-4 space-y-3">
+                      <div>
+                        <p className="text-[10px] font-semibold text-dark-500 uppercase tracking-wider mb-1.5">Capabilities</p>
+                        <div className="flex flex-wrap gap-1">
+                          {state.capabilities.map(c => (
+                            <span key={c} className="px-1.5 py-0.5 rounded bg-dark-800 text-[10px] text-dark-400">{c}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-semibold text-dark-500 uppercase tracking-wider mb-1.5">Memory</p>
+                        <div className="space-y-1">
+                          {state.memory.slice(0, 4).map((m, i) => (
+                            <p key={i} className="text-[10px] text-dark-400 flex items-start gap-1.5">
+                              <Brain className="h-3 w-3 text-dark-600 shrink-0 mt-0.5" />
+                              {m}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-semibold text-dark-500 uppercase tracking-wider mb-1.5">Last Action</p>
+                        <p className="text-[11px] text-dark-400">{state.lastAction}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )
+        })}
+      </div>
     </div>
   )
+}
+
+const agentTasks: Record<string, string> = {
+  'agent-ceo': 'Generate weekly executive summary with market intelligence',
+  'agent-hr': 'Screen candidates and prepare interview pipeline',
+  'agent-finance': 'Review monthly expenses and flag anomalies',
+  'agent-sales': 'Score leads and prioritize enterprise opportunities',
+  'agent-marketing': 'Optimize Q3 campaign performance across channels',
+  'agent-ops': 'Audit operational processes and identify bottlenecks',
+  'agent-legal': 'Review supplier agreement for compliance issues',
+  'agent-support': 'Process ticket queue and update knowledge base',
 }
