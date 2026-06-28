@@ -1,5 +1,6 @@
 export type ExecutionPhase =
   | 'idle'
+  | 'analyzing'
   | 'planning'
   | 'decomposing'
   | 'assigning_agents'
@@ -19,6 +20,9 @@ export interface Subtask {
   knowledgeQueries: string[]
   startedAt: string | null
   completedAt: string | null
+  priority: 'high' | 'medium' | 'low'
+  depth: number
+  executionGroup: number
 }
 
 export interface ExecutionPlan {
@@ -26,7 +30,9 @@ export interface ExecutionPlan {
   reasoning: string[]
   subtasks: Subtask[]
   dependencies: { from: string; to: string }[]
+  depthLevels: number
   createdAt: string
+  summary: string
 }
 
 export interface Execution {
@@ -40,6 +46,9 @@ export interface Execution {
   result: string | null
   error: string | null
   history: { phase: ExecutionPhase; timestamp: string; detail: string }[]
+  taskResults: Record<string, string>
+  completedCount: number
+  totalCount: number
 }
 
 export interface Approval {
@@ -56,14 +65,7 @@ export interface Approval {
 }
 
 export type KnowledgeItemType =
-  | 'document'
-  | 'policy'
-  | 'employee'
-  | 'customer'
-  | 'project'
-  | 'invoice'
-  | 'contract'
-  | 'note'
+  | 'document' | 'policy' | 'employee' | 'customer' | 'project' | 'invoice' | 'contract' | 'note'
 
 export interface KnowledgeItem {
   id: string
@@ -92,7 +94,7 @@ export interface WorkflowDefinition {
   id: string
   name: string
   description: string
-  triggers: string[]  // keywords that trigger this workflow
+  triggers: string[]
   steps: WorkflowDefStep[]
   createdAt: string
   updatedAt: string
@@ -110,11 +112,8 @@ export interface WorkflowDefStep {
   order: number
 }
 
-export interface WorkflowRun {
-  id: string
-  workflowId: string
-  status: 'running' | 'completed' | 'failed'
-  startedAt: string
-  completedAt: string | null
-  steps: { stepId: string; status: 'pending' | 'running' | 'completed' | 'failed'; output: string | null }[]
+export interface AgentActivityLog {
+  agentId: string
+  executionId: string
+  entries: { timestamp: string; action: string; detail: string; severity: 'info' | 'success' | 'warning' | 'error' }[]
 }

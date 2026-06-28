@@ -1,38 +1,49 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bot, Search, Play, Pause, RotateCcw, Loader2, CheckCircle2, XCircle, Clock, Brain, Activity, Zap, BarChart3, ChevronDown, ChevronUp, Terminal, AlertCircle } from 'lucide-react'
+import { Bot, Search, Play, Loader2, CheckCircle2, Clock, Brain, Activity, ChevronDown, ChevronUp, Terminal, AlertCircle, ListChecks } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useAgentsStore, type AgentState } from '@/store/agentsStore'
 import { useExecutionEngine } from '@/store/executionEngine'
 
-const agentsList = [
-  { id: 'agent-ceo', name: 'CEOArya', role: 'CEO Agent', color: 'from-blue-500/20 to-blue-600/10 border-blue-500/20', textColor: 'text-blue-400', description: 'Strategic decision-making, executive summaries, market intelligence, and board-level reporting.' },
-  { id: 'agent-hr', name: 'HRBot', role: 'HR Agent', color: 'from-emerald-500/20 to-emerald-600/10 border-emerald-500/20', textColor: 'text-emerald-400', description: 'Talent acquisition, employee engagement, performance reviews, and organizational development.' },
-  { id: 'agent-finance', name: 'FinanceAI', role: 'Finance Agent', color: 'from-amber-500/20 to-amber-600/10 border-amber-500/20', textColor: 'text-amber-400', description: 'Financial analysis, forecasting, budget optimization, invoicing, and compliance monitoring.' },
-  { id: 'agent-sales', name: 'SalesPro', role: 'Sales Agent', color: 'from-violet-500/20 to-violet-600/10 border-violet-500/20', textColor: 'text-violet-400', description: 'Lead scoring, pipeline management, deal negotiation, and revenue forecasting.' },
-  { id: 'agent-marketing', name: 'MarketGenius', role: 'Marketing Agent', color: 'from-pink-500/20 to-pink-600/10 border-pink-500/20', textColor: 'text-pink-400', description: 'Campaign optimization, audience segmentation, content strategy, and analytics.' },
-  { id: 'agent-ops', name: 'OpsBot', role: 'Operations Agent', color: 'from-cyan-500/20 to-cyan-600/10 border-cyan-500/20', textColor: 'text-cyan-400', description: 'Process optimization, resource allocation, workflow automation, and scheduling.' },
-  { id: 'agent-legal', name: 'LegalShield', role: 'Legal Agent', color: 'from-red-500/20 to-red-600/10 border-red-500/20', textColor: 'text-red-400', description: 'Contract review, compliance monitoring, risk assessment, and IP protection.' },
-  { id: 'agent-support', name: 'SupportBot', role: 'Support Agent', color: 'from-indigo-500/20 to-indigo-600/10 border-indigo-500/20', textColor: 'text-indigo-400', description: 'Ticket routing, knowledge base retrieval, sentiment analysis, and automated resolution.' },
-]
+const metaMap: Record<string, { color: string; textColor: string }> = {
+  'agent-ceo': { color: 'from-blue-500/20 to-blue-600/10 border-blue-500/20', textColor: 'text-blue-400' },
+  'agent-hr': { color: 'from-emerald-500/20 to-emerald-600/10 border-emerald-500/20', textColor: 'text-emerald-400' },
+  'agent-finance': { color: 'from-amber-500/20 to-amber-600/10 border-amber-500/20', textColor: 'text-amber-400' },
+  'agent-sales': { color: 'from-violet-500/20 to-violet-600/10 border-violet-500/20', textColor: 'text-violet-400' },
+  'agent-marketing': { color: 'from-pink-500/20 to-pink-600/10 border-pink-500/20', textColor: 'text-pink-400' },
+  'agent-ops': { color: 'from-cyan-500/20 to-cyan-600/10 border-cyan-500/20', textColor: 'text-cyan-400' },
+  'agent-legal': { color: 'from-red-500/20 to-red-600/10 border-red-500/20', textColor: 'text-red-400' },
+  'agent-support': { color: 'from-indigo-500/20 to-indigo-600/10 border-indigo-500/20', textColor: 'text-indigo-400' },
+}
+
+const agentTasks: Record<string, string> = {
+  'agent-ceo': 'Generate weekly executive summary with market intelligence',
+  'agent-hr': 'Screen candidates and prepare interview pipeline',
+  'agent-finance': 'Review monthly expenses and flag anomalies',
+  'agent-sales': 'Score leads and prioritize enterprise opportunities',
+  'agent-marketing': 'Optimize Q3 campaign performance across channels',
+  'agent-ops': 'Audit operational processes and identify bottlenecks',
+  'agent-legal': 'Review supplier agreement for compliance issues',
+  'agent-support': 'Process ticket queue and update knowledge base',
+}
 
 export function Agents() {
   const agents = useAgentsStore(s => s.agents)
   const executeTask = useAgentsStore(s => s.executeTask)
+  const agentLogs = useExecutionEngine(s => s.agentLogs)
   const [search, setSearch] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [runningTask, setRunningTask] = useState<string | null>(null)
 
-  const filtered = agentsList.filter(a =>
+  const filtered = agents.filter(a =>
     a.name.toLowerCase().includes(search.toLowerCase()) ||
     a.role.toLowerCase().includes(search.toLowerCase())
   )
 
   async function runDemoTask(agentId: string) {
     setRunningTask(agentId)
-    const agent = agents.find(a => a.id === agentId)
-    const demo = agentTasks[agentId] || 'Process assigned business task'
-    await executeTask(agentId, demo)
+    const task = agentTasks[agentId] || 'Process assigned business task'
+    await executeTask(agentId, task)
     setRunningTask(null)
   }
 
@@ -40,7 +51,9 @@ export function Agents() {
     <div className="p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
       <div>
         <h1 className="text-xl lg:text-2xl font-bold text-dark-100 tracking-tight">AI Agents</h1>
-        <p className="text-sm text-dark-400 mt-0.5">Eight specialized business agents with autonomous execution capabilities</p>
+        <p className="text-sm text-dark-400 mt-0.5">
+          Eight specialized business agents. Each has real execution logic, memory, and an activity log.
+        </p>
       </div>
 
       <div className="relative max-w-md">
@@ -51,14 +64,15 @@ export function Agents() {
       </div>
 
       <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {filtered.map((meta, i) => {
-          const state = agents.find(a => a.id === meta.id)!
-          const isExpanded = expandedId === meta.id
-          const isRunning = runningTask === meta.id
+        {filtered.map((state, i) => {
+          const meta = metaMap[state.id] || { color: 'border-dark-700 bg-dark-800/30', textColor: 'text-dark-400' }
+          const isExpanded = expandedId === state.id
+          const isRunning = runningTask === state.id
+          const logs = agentLogs[state.id] || []
 
           return (
             <motion.div
-              key={meta.id}
+              key={state.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
@@ -71,8 +85,8 @@ export function Agents() {
                       <Bot className={cn('h-5 w-5', meta.textColor)} />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-dark-100">{meta.name}</p>
-                      <p className="text-[11px] text-dark-500">{meta.role}</p>
+                      <p className="text-sm font-semibold text-dark-100">{state.name}</p>
+                      <p className="text-[11px] text-dark-500">{state.role}</p>
                     </div>
                   </div>
                   <div className={cn(
@@ -85,7 +99,7 @@ export function Agents() {
                   )} />
                 </div>
 
-                <p className="text-[11px] text-dark-400 leading-relaxed mb-3 line-clamp-2">{meta.description}</p>
+                <p className="text-[11px] text-dark-400 leading-relaxed mb-3 line-clamp-2">{state.description}</p>
 
                 {state.currentTask && (
                   <div className="flex items-center gap-1.5 mb-2 px-2 py-1.5 rounded bg-dark-800/50">
@@ -101,7 +115,7 @@ export function Agents() {
                       <span className="text-dark-300 font-medium">{state.confidence}%</span>
                     </div>
                     <div className="h-1.5 bg-dark-800 rounded-full overflow-hidden">
-                      <div className={cn('h-full rounded-full transition-all duration-500', meta.textColor.replace('text-', 'bg-').replace('400', '400'))} style={{ width: `${state.confidence}%` }} />
+                      <div className={cn('h-full rounded-full transition-all duration-500', meta.textColor.replace('text-', 'bg-'))} style={{ width: `${state.confidence}%` }} />
                     </div>
                   </div>
                   <div className="text-right">
@@ -109,7 +123,7 @@ export function Agents() {
                     <p className="text-[10px] text-dark-500">success</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-semibold text-dark-200">{state.taskCount}</p>
+                    <p className="text-xs font-semibold text-dark-200">{state.taskCount.toLocaleString()}</p>
                     <p className="text-[10px] text-dark-500">tasks</p>
                   </div>
                 </div>
@@ -117,7 +131,7 @@ export function Agents() {
 
               <div className="px-4 pb-4 flex items-center gap-2">
                 <button
-                  onClick={() => runDemoTask(meta.id)}
+                  onClick={() => runDemoTask(state.id)}
                   disabled={isRunning || state.status === 'running'}
                   className={cn(
                     'flex-1 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all',
@@ -133,7 +147,7 @@ export function Agents() {
                   {isRunning ? 'Executing...' : 'Execute'}
                 </button>
                 <button
-                  onClick={() => setExpandedId(isExpanded ? null : meta.id)}
+                  onClick={() => setExpandedId(isExpanded ? null : state.id)}
                   className="p-1.5 rounded-lg text-dark-500 hover:text-dark-300 hover:bg-dark-800 transition-colors"
                 >
                   {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -155,21 +169,44 @@ export function Agents() {
                           ))}
                         </div>
                       </div>
+
                       <div>
                         <p className="text-[10px] font-semibold text-dark-500 uppercase tracking-wider mb-1.5">Memory</p>
                         <div className="space-y-1">
                           {state.memory.slice(0, 4).map((m, i) => (
                             <p key={i} className="text-[10px] text-dark-400 flex items-start gap-1.5">
                               <Brain className="h-3 w-3 text-dark-600 shrink-0 mt-0.5" />
-                              {m}
+                              <span className="line-clamp-1">{m}</span>
                             </p>
                           ))}
                         </div>
                       </div>
+
                       <div>
                         <p className="text-[10px] font-semibold text-dark-500 uppercase tracking-wider mb-1.5">Last Action</p>
                         <p className="text-[11px] text-dark-400">{state.lastAction}</p>
                       </div>
+
+                      {logs.length > 0 && (
+                        <div>
+                          <p className="text-[10px] font-semibold text-dark-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                            <ListChecks className="h-3 w-3" /> Activity Log ({logs.length})
+                          </p>
+                          <div className="space-y-1 max-h-32 overflow-y-auto">
+                            {logs.map((log, i) => (
+                              <div key={i} className="flex items-start gap-1.5 text-[10px]">
+                                <div className={cn(
+                                  'w-1.5 h-1.5 rounded-full mt-1 shrink-0',
+                                  log.severity === 'success' ? 'bg-emerald-400' :
+                                  log.severity === 'warning' ? 'bg-amber-400' :
+                                  log.severity === 'error' ? 'bg-red-400' : 'bg-dark-500',
+                                )} />
+                                <span className="text-dark-500">{log.detail}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}
@@ -180,15 +217,4 @@ export function Agents() {
       </div>
     </div>
   )
-}
-
-const agentTasks: Record<string, string> = {
-  'agent-ceo': 'Generate weekly executive summary with market intelligence',
-  'agent-hr': 'Screen candidates and prepare interview pipeline',
-  'agent-finance': 'Review monthly expenses and flag anomalies',
-  'agent-sales': 'Score leads and prioritize enterprise opportunities',
-  'agent-marketing': 'Optimize Q3 campaign performance across channels',
-  'agent-ops': 'Audit operational processes and identify bottlenecks',
-  'agent-legal': 'Review supplier agreement for compliance issues',
-  'agent-support': 'Process ticket queue and update knowledge base',
 }
