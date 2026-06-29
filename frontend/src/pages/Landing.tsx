@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import {
   Hexagon, ArrowRight, ChevronRight, Menu, X, Play, Sparkles,
@@ -8,7 +8,6 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ROUTES } from '@/utils/constants'
-import { cn } from '@/utils/cn'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },

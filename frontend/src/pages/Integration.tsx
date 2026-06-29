@@ -1,17 +1,16 @@
 import { useEffect, useState, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   Bot, Workflow, Database, FileText, FunctionSquare,
-  Activity, HeartPulse, Loader2, CheckCircle2, XCircle,
-  AlertCircle, Info, ArrowRight, Play, RefreshCw,
-  Search, Table2, FolderOpen, Box, ListChecks,
-  ShieldCheck, Terminal, Sparkles, Braces,
+  Activity, Loader2, CheckCircle2, XCircle,
+  AlertCircle, Play, RefreshCw, Sparkles,
+  Table2, FolderOpen, Box, ListChecks,
+  ShieldCheck, Terminal, Braces,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
-import { useLemmaStore } from '@/store/lemmaStore'
+import { useLemmaStore, type LemmaState } from '@/store/lemmaStore'
 import type {
-  LemmaHealthStatus, LemmaExecutionLog, LemmaAgentInfo,
-  LemmaWorkflowInfo, LemmaFunctionInfo, LemmaTableInfo, LemmaFileInfo,
+  LemmaHealthStatus, LemmaExecutionLog,
 } from '@/types/lemma'
 
 type Tab = 'overview' | 'agents' | 'workflows' | 'datastore' | 'documents' | 'functions' | 'logs'
@@ -43,7 +42,7 @@ export function Integration() {
   const [pipelineStep, setPipelineStep] = useState(-1)
   const [pipelineRunning, setPipelineRunning] = useState(false)
   const [pipelineResult, setPipelineResult] = useState<string | null>(null)
-  const [pipelineObjective, setPipelineObjective] = useState('')
+  const [_pipelineObjective, setPipelineObjective] = useState('')
   const pipelineTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -70,6 +69,7 @@ export function Integration() {
       if (step <= pipelineStages.length) {
         setPipelineStep(step)
         lemma.addExecutionLog({
+          id: `pipeline-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
           type: 'workflow_run',
           status: step < pipelineStages.length ? 'running' : 'completed',
           name: pipelineStages[Math.min(step - 1, pipelineStages.length - 1)].phase,
@@ -302,7 +302,6 @@ function PipelineSection({
           {pipelineStages.map((stage, i) => {
             const isDone = pipelineStep > i
             const isCurrent = pipelineStep === i
-            const isPending = pipelineStep < i || pipelineStep === -1
             const Icon = stage.icon
 
             return (
@@ -358,7 +357,7 @@ function PipelineSection({
   )
 }
 
-function ResourceGrid({ lemma }: { lemma: ReturnType<typeof useLemmaStore> }) {
+function ResourceGrid({ lemma }: { lemma: LemmaState }) {
   const resources = [
     { label: 'Agents', count: lemma.agents.length, icon: Bot, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
     { label: 'Workflows', count: lemma.workflows.length, icon: Workflow, color: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },

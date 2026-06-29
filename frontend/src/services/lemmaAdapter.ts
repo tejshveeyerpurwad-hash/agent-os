@@ -1,10 +1,8 @@
 import { useLemmaStore } from '@/store/lemmaStore'
-import { useExecutionEngine } from '@/store/executionEngine'
 import { useAgentsStore } from '@/store/agentsStore'
-import { useKnowledgeStore } from '@/store/knowledgeStore'
 import { useActivityStore } from '@/store/activityStore'
 import { analyzeObjective } from '@/store/plannerEngine'
-import type { ExecutionPlan, Subtask } from '@/types/execution'
+import type { Subtask } from '@/types/execution'
 
 export async function executeWithLemma(
   objective: string,
@@ -14,7 +12,6 @@ export async function executeWithLemma(
 ): Promise<string | null> {
   const lemmaStore = useLemmaStore.getState()
   const agentsStore = useAgentsStore.getState()
-  const knowledgeStore = useKnowledgeStore.getState()
   const activityStore = useActivityStore.getState()
 
   if (!lemmaStore.client || !lemmaStore.initialized) {

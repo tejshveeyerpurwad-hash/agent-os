@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Bot, CheckCircle2, Loader2, AlertCircle, Terminal, Activity, Zap, Shield } from 'lucide-react'
 import { cn } from '@/utils/cn'

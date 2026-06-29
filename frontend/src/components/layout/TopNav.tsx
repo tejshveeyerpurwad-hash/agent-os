@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Search, Sun, Moon, Menu, X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react'
+import { Bell, Search, Sun, Moon, Menu, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import { useThemeStore } from '@/store/themeStore'
 import { useAuthStore } from '@/store/authStore'

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Activity as ActivityIcon, Bot, CheckCircle2, AlertCircle, Info, AlertTriangle, Filter, Clock, ChevronDown, Search, User, FileText, Workflow, BrainCircuit } from 'lucide-react'
+import { Activity as ActivityIcon, Bot, CheckCircle2, AlertCircle, Info, AlertTriangle, Clock, Search, FileText, Workflow, BrainCircuit } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useActivityStore } from '@/store/activityStore'
 import type { ActivityEvent } from '@/types/execution'

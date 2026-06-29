@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Bot, User, Hexagon, ArrowUp, CheckCircle, Loader2 } from 'lucide-react'
+import { Search, Bot, User, ArrowUp } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 const conversations = [

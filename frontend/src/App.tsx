@@ -5,20 +5,20 @@ import { AuthGuard } from '@/components/layout/AuthGuard'
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary'
 import { ROUTES } from '@/utils/constants'
 
-const Landing = lazy(() => import('@/pages/Landing'))
-const Home = lazy(() => import('@/pages/Home'))
-const Workspace = lazy(() => import('@/pages/Workspace'))
-const Planner = lazy(() => import('@/pages/Planner'))
-const Agents = lazy(() => import('@/pages/Agents'))
-const Workflows = lazy(() => import('@/pages/Workflows'))
-const Knowledge = lazy(() => import('@/pages/Knowledge'))
-const Analytics = lazy(() => import('@/pages/Analytics'))
-const Activity = lazy(() => import('@/pages/Activity'))
-const Integration = lazy(() => import('@/pages/Integration'))
-const Conversations = lazy(() => import('@/pages/Conversations'))
-const Calendar = lazy(() => import('@/pages/Calendar'))
-const Team = lazy(() => import('@/pages/Team'))
-const Settings = lazy(() => import('@/pages/Settings'))
+const Landing = lazy(() => import('@/pages/Landing').then(m => ({ default: m.Landing })))
+const Home = lazy(() => import('@/pages/Home').then(m => ({ default: m.Home })))
+const Workspace = lazy(() => import('@/pages/Workspace').then(m => ({ default: m.Workspace })))
+const Planner = lazy(() => import('@/pages/Planner').then(m => ({ default: m.Planner })))
+const Agents = lazy(() => import('@/pages/Agents').then(m => ({ default: m.Agents })))
+const Workflows = lazy(() => import('@/pages/Workflows').then(m => ({ default: m.Workflows })))
+const Knowledge = lazy(() => import('@/pages/Knowledge').then(m => ({ default: m.Knowledge })))
+const Analytics = lazy(() => import('@/pages/Analytics').then(m => ({ default: m.Analytics })))
+const Activity = lazy(() => import('@/pages/Activity').then(m => ({ default: m.Activity })))
+const Integration = lazy(() => import('@/pages/Integration').then(m => ({ default: m.Integration })))
+const Conversations = lazy(() => import('@/pages/Conversations').then(m => ({ default: m.Conversations })))
+const Calendar = lazy(() => import('@/pages/Calendar').then(m => ({ default: m.Calendar })))
+const Team = lazy(() => import('@/pages/Team').then(m => ({ default: m.Team })))
+const Settings = lazy(() => import('@/pages/Settings').then(m => ({ default: m.Settings })))
 
 function PageLoader() {
   return (

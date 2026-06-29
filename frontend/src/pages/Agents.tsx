@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bot, Search, Play, Loader2, CheckCircle2, Clock, Brain, Activity, ChevronDown, ChevronUp, Terminal, AlertCircle, ListChecks } from 'lucide-react'
+import { Bot, Search, Play, Loader2, ChevronDown, ChevronUp, ListChecks, Brain } from 'lucide-react'
 import { cn } from '@/utils/cn'
-import { useAgentsStore, type AgentState } from '@/store/agentsStore'
+import { useAgentsStore } from '@/store/agentsStore'
 import { useExecutionEngine } from '@/store/executionEngine'
 
 const metaMap: Record<string, { color: string; textColor: string }> = {

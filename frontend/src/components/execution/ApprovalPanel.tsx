@@ -1,13 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/utils/cn'
-import { AlertCircle, CheckCircle2, XCircle, Clock, Bot, DollarSign } from 'lucide-react'
+import { AlertCircle, CheckCircle2, XCircle, Clock, DollarSign } from 'lucide-react'
 import { useExecutionEngine } from '@/store/executionEngine'
-import { useAgentsStore } from '@/store/agentsStore'
-import type { Approval } from '@/types/execution'
+
 
 export function ApprovalPanel() {
   const { approvals, approveTask, rejectTask } = useExecutionEngine()
-  const agents = useAgentsStore(s => s.agents)
   const pending = approvals.filter(a => a.status === 'pending')
 
   if (pending.length === 0) return null
@@ -23,9 +21,6 @@ export function ApprovalPanel() {
         <div className="space-y-2 max-h-32 overflow-y-auto">
           <AnimatePresence>
             {pending.map((apr, i) => {
-              const agent = agents.find(a =>
-                a.id === apr.subtaskId?.split('-').slice(0, -1).join('-')
-              )
               return (
                 <motion.div
                   key={apr.id}

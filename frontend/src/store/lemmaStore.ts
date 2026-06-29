@@ -20,7 +20,7 @@ const LEMMA_CONFIG: Partial<LemmaConfig> = {
   maxRetries: 2,
 }
 
-interface LemmaState {
+export interface LemmaState {
   client: LemmaClient | null
   initialized: boolean
   health: LemmaHealthStatus
@@ -46,7 +46,7 @@ interface LemmaActions {
   runFunction: (name: string, input?: Record<string, unknown>) => Promise<string | null>
   queryDatastore: (query: string) => Promise<Record<string, unknown>[]>
   searchDocuments: (query: string) => Promise<LemmaFileInfo[]>
-  addExecutionLog: (log: Omit<LemmaExecutionLog, 'id'>) => void
+  addExecutionLog: (log: LemmaExecutionLog) => void
   clearLogs: () => void
   setPodId: (podId: string) => void
 }
@@ -227,7 +227,8 @@ export const useLemmaStore = create<LemmaState & LemmaActions>((set, get) => ({
     const client = get().client
     if (!client) return null
     const logId = `lemma-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
-    const log: Omit<LemmaExecutionLog, 'id'> = {
+    const log: LemmaExecutionLog = {
+      id: logId,
       type: 'agent_run',
       status: 'running',
       name,
@@ -236,7 +237,7 @@ export const useLemmaStore = create<LemmaState & LemmaActions>((set, get) => ({
       completedAt: null,
       duration: null,
     }
-    get().addExecutionLog({ ...log, id: logId })
+    get().addExecutionLog(log)
     try {
       const result = await client.agents.run(name, message)
       const output = result instanceof ReadableStream ? 'Streaming response' : JSON.stringify(result, null, 2)
@@ -248,8 +249,7 @@ export const useLemmaStore = create<LemmaState & LemmaActions>((set, get) => ({
       useActivityStore.getState().addEvent({
         type: 'agent',
         action: `Lemma agent "${name}" executed`,
-        detail: message,
-        name,
+        detail: typeof message === 'string' ? message : JSON.stringify(message),
         severity: 'success',
       })
       return output
@@ -267,7 +267,8 @@ export const useLemmaStore = create<LemmaState & LemmaActions>((set, get) => ({
     const client = get().client
     if (!client) return null
     const logId = `lemma-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
-    const log: Omit<LemmaExecutionLog, 'id'> = {
+    const log: LemmaExecutionLog = {
+      id: logId,
       type: 'workflow_run',
       status: 'running',
       name,
@@ -275,7 +276,7 @@ export const useLemmaStore = create<LemmaState & LemmaActions>((set, get) => ({
       completedAt: null,
       duration: null,
     }
-    get().addExecutionLog({ ...log, id: logId })
+    get().addExecutionLog(log)
     try {
       const result = await client.workflows.runs.create(name)
       const output = JSON.stringify(result, null, 2)
@@ -305,7 +306,8 @@ export const useLemmaStore = create<LemmaState & LemmaActions>((set, get) => ({
     const client = get().client
     if (!client) return null
     const logId = `lemma-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
-    const log: Omit<LemmaExecutionLog, 'id'> = {
+    const log: LemmaExecutionLog = {
+      id: logId,
       type: 'function_run',
       status: 'running',
       name,
@@ -314,7 +316,7 @@ export const useLemmaStore = create<LemmaState & LemmaActions>((set, get) => ({
       completedAt: null,
       duration: null,
     }
-    get().addExecutionLog({ ...log, id: logId })
+    get().addExecutionLog(log)
     try {
       const result = await client.functions.run(name, { input })
       const output = JSON.stringify(result, null, 2)
@@ -327,7 +329,6 @@ export const useLemmaStore = create<LemmaState & LemmaActions>((set, get) => ({
         type: 'agent',
         action: `Lemma function "${name}" executed`,
         detail: input ? JSON.stringify(input) : '',
-        name,
         severity: 'success',
       })
       return output
@@ -341,11 +342,12 @@ export const useLemmaStore = create<LemmaState & LemmaActions>((set, get) => ({
     }
   },
 
-  queryDatastore: async (query) => {
+  queryDatastore: async (query): Promise<Record<string, unknown>[]> => {
     const client = get().client
     if (!client) return []
     const logId = `lemma-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
-    const log: Omit<LemmaExecutionLog, 'id'> = {
+    const log: LemmaExecutionLog = {
+      id: logId,
       type: 'datastore_query',
       status: 'running',
       name: 'datastore.query',
@@ -354,10 +356,11 @@ export const useLemmaStore = create<LemmaState & LemmaActions>((set, get) => ({
       completedAt: null,
       duration: null,
     }
-    get().addExecutionLog({ ...log, id: logId })
+    get().addExecutionLog(log)
     try {
       const result = await client.datastore.query(query)
-      const records = (result.records || result.items || []) as Record<string, unknown>[]
+      const resultAny = result as Record<string, unknown>
+      const records: Record<string, unknown>[] = (resultAny.records as Record<string, unknown>[]) || (resultAny.items as Record<string, unknown>[]) || []
       set(state => ({
         executionLogs: state.executionLogs.map(l =>
           l.id === logId ? { ...l, status: 'completed', output: `${records.length} records returned`, completedAt: new Date().toISOString(), duration: 0 } : l
@@ -378,7 +381,8 @@ export const useLemmaStore = create<LemmaState & LemmaActions>((set, get) => ({
     const client = get().client
     if (!client) return []
     const logId = `lemma-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
-    const log: Omit<LemmaExecutionLog, 'id'> = {
+    const log: LemmaExecutionLog = {
+      id: logId,
       type: 'document_search',
       status: 'running',
       name: 'files.search',
@@ -387,7 +391,7 @@ export const useLemmaStore = create<LemmaState & LemmaActions>((set, get) => ({
       completedAt: null,
       duration: null,
     }
-    get().addExecutionLog({ ...log, id: logId })
+    get().addExecutionLog(log)
     try {
       const result = await client.files.search(query)
       const items = (result.items || []).map((f: Record<string, unknown>) => ({
@@ -415,7 +419,7 @@ export const useLemmaStore = create<LemmaState & LemmaActions>((set, get) => ({
   },
 
   addExecutionLog: (log) => set(state => ({
-    executionLogs: [log as LemmaExecutionLog, ...state.executionLogs].slice(0, 100),
+    executionLogs: [log, ...state.executionLogs].slice(0, 100),
   })),
 
   clearLogs: () => set({ executionLogs: [] }),

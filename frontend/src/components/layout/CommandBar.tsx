@@ -105,10 +105,6 @@ export function CommandBar() {
     executePrompt(example)
   }
 
-  function submitQuery() {
-    if (input.trim()) executePrompt(input.trim())
-  }
-
   const isOpen = useAppStore(s => s.commandOpen)
   const setCommandOpen = useAppStore(s => s.setCommandOpen)
 

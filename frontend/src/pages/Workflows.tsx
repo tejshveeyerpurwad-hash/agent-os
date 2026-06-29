@@ -1,14 +1,11 @@
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Workflow as WorkflowIcon, Play, Pause, CheckCircle2, Loader2, XCircle, Clock, Bot, Plus, Search, ArrowRight, Terminal, Sparkles, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Workflow as WorkflowIcon, Play, Loader2, Clock, Bot, Plus, Search, ArrowRight, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@/utils/cn'
-import { useExecutionEngine } from '@/store/executionEngine'
 import { useAgentsStore } from '@/store/agentsStore'
 import { useActivityStore } from '@/store/activityStore'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { Modal } from '@/components/ui/Modal'
-import { Input } from '@/components/ui/Input'
 import type { WorkflowDefinition } from '@/types/execution'
 
 const workflowDefs: WorkflowDefinition[] = [
@@ -53,15 +50,11 @@ const workflowDefs: WorkflowDefinition[] = [
 ]
 
 export function Workflows() {
-  const { submitObjective, isProcessing } = useExecutionEngine()
   const agents = useAgentsStore(s => s.agents)
   const activityStore = useActivityStore()
   const [search, setSearch] = useState('')
-  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [runningWorkflowId, setRunningWorkflowId] = useState<string | null>(null)
   const [expandedSteps, setExpandedSteps] = useState<string[]>([])
-  const [showRunModal, setShowRunModal] = useState(false)
-  const [runInput, setRunInput] = useState('')
   const [selectedWorkflow, setSelectedWorkflow] = useState<WorkflowDefinition | null>(null)
 
   const filtered = useMemo(() => workflowDefs.filter(w =>

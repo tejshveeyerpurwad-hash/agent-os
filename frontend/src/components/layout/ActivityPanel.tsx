@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
-  X, Bell, CheckCircle, AlertCircle, Info, AlertTriangle,
+  X, Bell,
   Bot, TrendingUp, Users, Globe, Zap, Layers, Shield,
   ChevronDown, ChevronUp,
 } from 'lucide-react'
@@ -9,9 +9,6 @@ import { useAppStore } from '@/store/appStore'
 import { activities, notifications, type BusinessActivity, type Notification } from '@/store/mockData'
 import { cn } from '@/utils/cn'
 
-const typeIcons: Record<string, typeof CheckCircle> = {
-  success: CheckCircle, error: AlertCircle, info: Info, warning: AlertTriangle,
-}
 const typeColors: Record<string, string> = {
   success: 'text-emerald-400 bg-emerald-500/10',
   error: 'text-red-400 bg-red-500/10',
@@ -61,7 +58,7 @@ function PanelContent({ activeTab, setActiveTab, unreadCount, setUnreadCount, on
   const [showAll, setShowAll] = useState(false)
   const displayActivities = showAll ? activities : activities.slice(0, 5)
 
-  function handleMarkRead(id: string) {
+  function handleMarkRead() {
     setUnreadCount(Math.max(0, unreadCount - 1))
   }
 
@@ -123,7 +120,6 @@ function PanelContent({ activeTab, setActiveTab, unreadCount, setUnreadCount, on
 }
 
 function ActivityItem({ activity }: { activity: BusinessActivity }) {
-  const TypeIcon = typeIcons[activity.type] || Info
   const AgentIcon = agentIcons[activity.agentRole as keyof typeof agentIcons] || Bot
 
   return (

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { BrainCircuit, Bot, FileText, ListChecks, Clock, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { BrainCircuit, Bot, ListChecks } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useExecutionEngine } from '@/store/executionEngine'
 import { useAgentsStore } from '@/store/agentsStore'

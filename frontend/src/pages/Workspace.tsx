@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Terminal, Loader2, Sparkles, CheckCircle2, Clock, XCircle, AlertCircle, Bot, ArrowRight, ListChecks } from 'lucide-react'
+import { Terminal, Loader2, Sparkles, CheckCircle2, ArrowRight, ListChecks } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useExecutionEngine } from '@/store/executionEngine'
-import { useAgentsStore } from '@/store/agentsStore'
 import { ExecutionPipeline } from '@/components/execution/ExecutionPipeline'
 import { ExecutionGraph } from '@/components/execution/ExecutionGraph'
 import { PlannerReasoning } from '@/components/execution/PlannerReasoning'
@@ -21,7 +20,6 @@ export function Workspace() {
   const [input, setInput] = useState('')
   const [showHistory, setShowHistory] = useState(false)
   const { currentExecution, isProcessing, cancelExecution, executions } = useExecutionEngine()
-  const agents = useAgentsStore(s => s.agents)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   function handleSubmit(e?: React.FormEvent) {
@@ -37,8 +35,6 @@ export function Workspace() {
       inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 120) + 'px'
     }
   }, [input])
-
-  const busyAgents = agents.filter(a => a.status === 'running')
 
   return (
     <div className="flex flex-col h-full overflow-x-hidden">

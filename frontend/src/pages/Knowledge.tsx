@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Search, FileText, BookOpen, Upload, Sparkles, Tag, Clock, Globe, Shield, Users, Briefcase, MoreHorizontal, Download, Star, Bot, ChevronRight, Building, FileSignature, Library, User } from 'lucide-react'
+import { Search, FileText, BookOpen, Sparkles, Briefcase, ChevronRight, Building, FileSignature, Library, User, Download } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useKnowledgeStore } from '@/store/knowledgeStore'
-import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
-import { Input } from '@/components/ui/Input'
 
 const typeConfig: Record<string, { label: string; icon: typeof FileText; color: string }> = {
   document: { label: 'Document', icon: FileText, color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
@@ -196,7 +194,7 @@ export function Knowledge() {
                 <p>Created: {new Date(selectedItem.createdAt).toLocaleDateString()}</p>
                 <p>Updated: {new Date(selectedItem.updatedAt).toLocaleDateString()}</p>
                 {Object.entries(selectedItem.metadata).map(([k, v]) => (
-                  <p key={k}>{k}: {v}</p>
+                  <p key={k}>{k}: {typeof v === 'string' ? v : JSON.stringify(v)}</p>
                 ))}
               </div>
               {related.length > 0 && (

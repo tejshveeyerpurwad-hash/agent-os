@@ -7,7 +7,7 @@ import { useAppStore } from '@/store/appStore'
 import { cn } from '@/utils/cn'
 
 export function MainLayout() {
-  const { sidebarOpen, rightPanelOpen, isMobile, setSidebarOpen, setIsMobile } = useAppStore()
+  const { sidebarOpen, isMobile, setSidebarOpen, setIsMobile } = useAppStore()
   const location = useLocation()
 
   const checkMobile = useCallback(() => {
@@ -30,8 +30,6 @@ export function MainLayout() {
       setSidebarOpen(false)
     }
   }, [location.pathname, isMobile, setSidebarOpen])
-
-  const sidebarWidth = sidebarOpen ? (isMobile ? 0 : 240) : (isMobile ? 0 : 64)
 
   return (
     <div className="flex h-screen bg-dark-950 overflow-hidden">

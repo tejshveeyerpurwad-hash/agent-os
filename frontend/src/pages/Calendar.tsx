@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Bot, Clock, Users as UsersIcon, FileText } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Bot, Clock } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']

@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { useActivityStore } from './activityStore'
-import { useKnowledgeStore } from './knowledgeStore'
 import type { AgentStatus } from '@/types/agent'
 
 export interface AgentState {
@@ -88,7 +87,7 @@ export const useAgentsStore = create<AgentsState & AgentsActions>((set, get) => 
     return ['agent-ceo']
   },
 
-  executeTask: async (agentId, taskDescription, executionId) => {
+  executeTask: async (agentId, taskDescription, _executionId) => {
     const agent = get().agents.find(a => a.id === agentId)
     if (!agent) return ''
 
@@ -105,15 +104,9 @@ export const useAgentsStore = create<AgentsState & AgentsActions>((set, get) => 
       action: `${agent.name} started: ${truncate(taskDescription, 60)}`,
       detail: taskDescription,
       agentId,
-      executionId,
+      executionId: _executionId,
       severity: 'info',
     })
-
-    const knowledgeStore = useKnowledgeStore.getState()
-    const relevantDocs = knowledgeStore.items.filter(item =>
-      item.content.toLowerCase().includes(taskDescription.toLowerCase().split(' ').slice(0, 3).join(' ')) ||
-      item.tags.some(t => taskDescription.toLowerCase().includes(t.toLowerCase()))
-    )
 
     await new Promise(r => setTimeout(r, 800 + Math.random() * 600))
 
@@ -137,7 +130,7 @@ export const useAgentsStore = create<AgentsState & AgentsActions>((set, get) => 
       action: `${agent.name} completed: ${truncate(taskDescription, 60)}`,
       detail: result,
       agentId,
-      executionId,
+      executionId: _executionId,
       severity: 'success',
     })
 
@@ -146,7 +139,7 @@ export const useAgentsStore = create<AgentsState & AgentsActions>((set, get) => 
     return result
   },
 
-  executeTaskSync: (agentId, taskDescription, executionId) => {
+  executeTaskSync: (agentId, taskDescription, _executionId) => {
     const agent = get().agents.find(a => a.id === agentId)
     const result = agent ? generateAgentResult(agentId, taskDescription) : ''
 

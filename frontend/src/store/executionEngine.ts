@@ -17,7 +17,7 @@ interface ExecutionState {
 
 interface ExecutionActions {
   submitObjective: (objective: string) => Promise<void>
-  approveTask: (approvalId: string) => Promise<void>
+  approveTask: (approvalId: string) => void
   rejectTask: (approvalId: string) => void
   cancelExecution: () => void
   getExecution: (id: string) => Execution | undefined
@@ -318,9 +318,8 @@ export const useExecutionEngine = create<ExecutionState & ExecutionActions>((set
           })
         )
 
-        results.forEach((r, i) => {
+        results.forEach((r) => {
           if (r.status === 'fulfilled') {
-            const task = tasksAtDepth[i]
             const taskResult = r.value
             set(state => ({
               currentExecution: state.currentExecution

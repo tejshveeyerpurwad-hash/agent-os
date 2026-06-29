@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Mail, Bot, MoreHorizontal, Search, Users as UsersIcon } from 'lucide-react'
+import { Mail, MoreHorizontal, Search } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 const team = [

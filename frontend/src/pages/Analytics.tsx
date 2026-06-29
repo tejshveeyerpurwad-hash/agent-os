@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { BarChart3, TrendingUp, Users, Clock, CheckCircle2, Activity, Zap, DollarSign, ArrowUp, ArrowDown, Bot, Brain, Target, Layers } from 'lucide-react'
+import { TrendingUp, CheckCircle2, Activity, Zap, DollarSign, ArrowUp, ArrowDown, Bot } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { Card, CardContent, CardTitle } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import { kpis, agents } from '@/store/mockData'
 
 const timeRanges = ['7D', '30D', '90D', '1Y'] as const
