@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Activity as ActivityIcon, Bot, CheckCircle2, AlertCircle, Info, AlertTriangle, Filter, Clock, ChevronDown, Search, User, FileText, Workflow, BrainCircuit } from 'lucide-react'
 import { cn } from '@/utils/cn'
@@ -42,13 +42,13 @@ export function Activity() {
   const [filter, setFilter] = useState<ActivityEvent['type'] | 'all'>('all')
   const [search, setSearch] = useState('')
 
-  const filtered = events.filter(e => {
+  const filtered = useMemo(() => events.filter(e => {
     if (filter !== 'all' && e.type !== filter) return false
     if (search && !e.action.toLowerCase().includes(search.toLowerCase()) && !e.detail.toLowerCase().includes(search.toLowerCase())) return false
     return true
-  })
+  }), [events, filter, search])
 
-  const typeCounts = {
+  const typeCounts = useMemo(() => ({
     all: events.length,
     execution: events.filter(e => e.type === 'execution').length,
     agent: events.filter(e => e.type === 'agent').length,
@@ -56,10 +56,10 @@ export function Activity() {
     approval: events.filter(e => e.type === 'approval').length,
     knowledge: events.filter(e => e.type === 'knowledge').length,
     system: events.filter(e => e.type === 'system').length,
-  }
+  }), [events])
 
   return (
-    <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl lg:text-2xl font-bold text-dark-100 tracking-tight">Activity</h1>
@@ -68,7 +68,7 @@ export function Activity() {
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <button onClick={markAllRead}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-primary-500/10 text-primary-400 hover:bg-primary-500/20 transition-colors">
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-primary-500/10 text-primary-400 hover:bg-primary-500/20 transition-colors focus-ring">
               Mark all read ({unreadCount})
             </button>
           )}
@@ -80,13 +80,16 @@ export function Activity() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-500" />
           <input value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Search activity..."
-            className="w-full pl-9 pr-3 py-2 rounded-lg bg-dark-800/50 border border-dark-700 text-sm text-dark-200 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40" />
+            aria-label="Search activity events"
+            className="w-full pl-9 pr-3 py-2 rounded-lg bg-dark-800/50 border border-dark-700 text-sm text-dark-200 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus-ring" />
         </div>
         <div className="flex gap-1.5 flex-wrap">
           {(['all', 'execution', 'agent', 'workflow', 'approval', 'knowledge', 'system'] as const).map(t => (
             <button key={t} onClick={() => setFilter(t)}
+              aria-label={t === 'all' ? 'Show all events' : `Show ${t} events`}
+              aria-pressed={filter === t}
               className={cn(
-                'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                'px-3 py-1.5 rounded-lg text-xs font-medium transition-all focus-ring',
                 filter === t ? 'bg-primary-500/10 text-primary-400 border border-primary-500/20' : 'bg-dark-800/30 text-dark-400 hover:text-dark-300 border border-transparent',
               )}>
               {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -97,7 +100,7 @@ export function Activity() {
       </div>
 
       <div className="relative">
-        <div className="absolute left-5 top-0 bottom-0 w-px bg-dark-800" />
+        <div className="absolute left-3 sm:left-5 top-0 bottom-0 w-px bg-dark-800" />
         <div className="space-y-1">
           {filtered.map((event, i) => {
             const TypeIcon = typeIcons[event.type] || ActivityIcon
@@ -108,10 +111,10 @@ export function Activity() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.015 }}
-                className="relative flex items-start gap-4 pl-12 pr-4 py-3 hover:bg-dark-800/20 rounded-lg transition-colors group"
+                className="relative flex items-start gap-4 pl-8 sm:pl-12 pr-4 py-3 hover:bg-dark-800/20 rounded-lg transition-colors group"
               >
                 <div className={cn(
-                  'absolute left-3.5 w-3 h-3 rounded-full border-2 border-dark-950 z-10',
+                  'absolute left-1.5 sm:left-3.5 w-3 h-3 rounded-full border-2 border-dark-950 z-10',
                   event.severity === 'success' ? 'bg-emerald-400' :
                   event.severity === 'warning' ? 'bg-amber-400' :
                   event.severity === 'error' ? 'bg-red-400' :
@@ -125,10 +128,10 @@ export function Activity() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-xs font-medium text-dark-200">{event.action}</p>
-                    <SevIcon className={cn('h-3 w-3', severityColors[event.severity])} />
+                    <p className="text-xs font-medium text-dark-200 truncate">{event.action}</p>
+                    <SevIcon className={cn('h-3 w-3 shrink-0', severityColors[event.severity])} />
                   </div>
-                  <p className="text-xs text-dark-400 mt-0.5">{event.detail}</p>
+                  <p className="text-xs text-dark-400 mt-0.5 break-words">{event.detail}</p>
                   <div className="flex items-center gap-3 mt-1">
                     <span className="flex items-center gap-1 text-[10px] text-dark-600">
                       <Clock className="h-3 w-3" />

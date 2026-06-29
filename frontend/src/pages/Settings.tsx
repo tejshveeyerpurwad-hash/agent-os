@@ -57,7 +57,7 @@ export function Settings() {
   ]
 
   return (
-    <div className="p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
       <div>
         <h1 className="text-xl lg:text-2xl font-bold text-dark-100 tracking-tight">Settings</h1>
         <p className="text-sm text-dark-400 mt-0.5">System configuration and management</p>
@@ -69,7 +69,7 @@ export function Settings() {
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap',
+                'flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap focus-ring',
                 activeTab === tab.id ? 'bg-primary-500/10 text-primary-400 border border-primary-500/20' : 'bg-dark-800/30 text-dark-400 hover:text-dark-300 border border-transparent',
               )}>
               <Icon className="h-3.5 w-3.5" />
@@ -79,7 +79,7 @@ export function Settings() {
         })}
       </div>
 
-      <div className="max-w-2xl">
+      <div className="w-full max-w-2xl">
         {activeTab === 'system' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
             <Card>
@@ -141,8 +141,10 @@ export function Settings() {
                         <p className="text-xs text-dark-500">{n.description}</p>
                       </div>
                       <button onClick={() => toggleNotification(n.id)}
+                        role="switch"
+                        aria-checked={n.enabled}
                         className={cn(
-                          'relative w-10 h-5 rounded-full transition-all duration-300',
+                          'relative w-10 h-5 rounded-full transition-all duration-300 focus-ring',
                           n.enabled ? 'bg-primary-500' : 'bg-dark-700',
                         )}>
                         <div className={cn(
@@ -218,14 +220,17 @@ export function Settings() {
                         <p className="text-sm font-medium text-dark-200">{k.name}</p>
                         <div className="flex items-center gap-1">
                           <button onClick={() => copyKey(k.id)}
-                            className="p-1.5 rounded text-dark-500 hover:text-dark-300 hover:bg-dark-800 transition-colors">
+                            className="p-1.5 rounded text-dark-500 hover:text-dark-300 hover:bg-dark-800 transition-colors focus-ring"
+                            aria-label="Copy API key">
                             {copyId === k.id ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                           </button>
                           <button onClick={() => setShowApiKey(!showApiKey)}
-                            className="p-1.5 rounded text-dark-500 hover:text-dark-300 hover:bg-dark-800 transition-colors">
+                            className="p-1.5 rounded text-dark-500 hover:text-dark-300 hover:bg-dark-800 transition-colors focus-ring"
+                            aria-label={showApiKey ? 'Hide API key' : 'Show API key'}>
                             {showApiKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                           </button>
-                          <button className="p-1.5 rounded text-dark-500 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                          <button className="p-1.5 rounded text-dark-500 hover:text-red-400 hover:bg-red-500/10 transition-colors focus-ring"
+                            aria-label="Delete API key">
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
@@ -265,7 +270,7 @@ export function Settings() {
                       <p className="text-sm font-medium text-dark-200">Clear All Activity</p>
                       <p className="text-xs text-dark-500">Permanently remove all activity events</p>
                     </div>
-                    <Button variant="danger" size="sm" onClick={() => activityStore.clear()}>Clear</Button>
+                    <Button variant="danger" size="sm" onClick={() => { if (window.confirm('Are you sure you want to clear all activity? This cannot be undone.')) { activityStore.clear() } }}>Clear</Button>
                   </div>
                 </div>
               </CardContent>

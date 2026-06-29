@@ -12,9 +12,12 @@ export function Planner() {
   const agents = useAgentsStore(s => s.agents)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const display = selectedId
-    ? executions.find(e => e.id === selectedId) || currentExecution
-    : currentExecution
+  const display = useMemo(() =>
+    selectedId
+      ? executions.find(e => e.id === selectedId) || currentExecution
+      : currentExecution,
+    [selectedId, executions, currentExecution]
+  )
 
   const plan = display?.plan
 
@@ -29,7 +32,7 @@ export function Planner() {
   }, [plan, agents])
 
   return (
-    <div className="p-4 lg:p-6 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto">
       <div>
         <h1 className="text-xl lg:text-2xl font-bold text-dark-100 tracking-tight">Planner</h1>
         <p className="text-sm text-dark-400 mt-0.5">The brain of AgentOS — plan decomposition, reasoning chain, and parallel execution graph</p>
@@ -59,7 +62,7 @@ export function Planner() {
                 <BrainCircuit className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-dark-100">{display.objective}</p>
+                <p className="text-sm font-semibold text-dark-100 truncate break-words">{display.objective}</p>
                 <div className="flex items-center gap-3 mt-0.5">
                   <span className="text-xs text-dark-500">Phase: {display.phase}</span>
                   {display.totalCount > 0 && (
@@ -72,18 +75,20 @@ export function Planner() {
             </div>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="lg:col-span-2 space-y-4 min-w-0">
               {plan && (
                 <>
                   <PlannerReasoning
                     reasoning={plan.reasoning}
                     isActive={display.phase !== 'completed'}
                   />
-                  <ExecutionGraph
-                    subtasks={plan.subtasks}
-                    currentTaskId={display.currentTaskId}
-                  />
+                  <div className="overflow-x-auto">
+                    <ExecutionGraph
+                      subtasks={plan.subtasks}
+                      currentTaskId={display.currentTaskId}
+                    />
+                  </div>
                 </>
               )}
 
@@ -92,7 +97,7 @@ export function Planner() {
                   <h3 className="text-xs font-semibold text-dark-300 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                     <ListChecks className="h-3.5 w-3.5" /> Execution Timeline
                   </h3>
-                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                  <div className="space-y-1 max-h-60 overflow-y-auto">
                     {display.history.map((h, i) => (
                       <div key={i} className="flex items-start gap-2 text-xs py-0.5">
                         <span className="text-[10px] text-dark-600 font-mono shrink-0 w-14">
@@ -105,7 +110,7 @@ export function Planner() {
                           h.phase === 'failed' ? 'text-red-400' :
                           'text-primary-400',
                         )}>{h.phase}</span>
-                        <span className="text-dark-400">{h.detail}</span>
+                        <span className="text-dark-400 break-words min-w-0">{h.detail}</span>
                       </div>
                     ))}
                   </div>
@@ -113,7 +118,7 @@ export function Planner() {
               )}
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 min-w-0">
               {plan && (
                 <div className="rounded-xl border border-dark-800 bg-dark-900/50 p-4">
                   <h3 className="text-xs font-semibold text-dark-300 uppercase tracking-wider mb-3 flex items-center gap-1.5">
@@ -132,8 +137,8 @@ export function Planner() {
                           <Bot className="h-3.5 w-3.5 text-dark-400" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-dark-200">{a.name}</p>
-                          <p className="text-[10px] text-dark-500">{a.role}</p>
+                          <p className="text-xs font-medium text-dark-200 truncate">{a.name}</p>
+                          <p className="text-[10px] text-dark-500 truncate">{a.role}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-xs font-medium text-dark-200">{a.completed}/{a.tasks}</p>
@@ -184,11 +189,13 @@ export function Planner() {
               {executions.filter(e => e.plan).length > 0 && (
                 <div className="rounded-xl border border-dark-800 bg-dark-900/50 p-4">
                   <h3 className="text-xs font-semibold text-dark-300 uppercase tracking-wider mb-3">Previous Plans</h3>
-                  <div className="space-y-1">
+                  <div className="space-y-1" role="tablist">
                     {executions.filter(e => e.plan).slice(0, 6).map(ex => (
                       <button key={ex.id} onClick={() => setSelectedId(ex.id)}
+                        role="tab"
+                        aria-selected={selectedId === ex.id}
                         className={cn(
-                          'w-full text-left p-2 rounded-lg text-xs transition-colors',
+                          'w-full text-left p-2 rounded-lg text-xs transition-colors focus-ring shrink-0',
                           selectedId === ex.id ? 'bg-primary-500/10 text-primary-400' : 'text-dark-400 hover:text-dark-300 hover:bg-dark-800/50',
                         )}>
                         <p className="truncate">{ex.objective}</p>
@@ -197,7 +204,8 @@ export function Planner() {
                     ))}
                     {selectedId && (
                       <button onClick={() => { setSelectedId(null); useExecutionEngine.getState() }}
-                        className="w-full text-center text-[10px] text-primary-400 hover:text-primary-300 pt-1">
+                        className="w-full text-center text-[10px] text-primary-400 hover:text-primary-300 pt-1 focus-ring shrink-0"
+                        aria-label="Back to current plan">
                         Back to current
                       </button>
                     )}

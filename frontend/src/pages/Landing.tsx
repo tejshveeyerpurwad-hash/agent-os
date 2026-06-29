@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import {
   Hexagon, ArrowRight, ChevronRight, Menu, X, Play, Sparkles,
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ROUTES } from '@/utils/constants'
+import { cn } from '@/utils/cn'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -121,10 +122,10 @@ function Navbar() {
             <span className="text-lg font-bold text-dark-100 tracking-tight">AgentOS</span>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-8" aria-label="Main navigation">
             {['Product', 'Agents', 'Features', 'Pricing'].map((item) => (
               <a key={item} href={`#${item.toLowerCase()}`}
-                className="text-sm text-dark-400 hover:text-dark-100 transition-colors duration-200">
+                className="text-sm text-dark-400 hover:text-dark-100 transition-colors duration-200 focus-ring">
                 {item}
               </a>
             ))}
@@ -147,7 +148,9 @@ function Navbar() {
           </div>
 
           <button onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden p-2 text-dark-400 hover:text-dark-100 transition-colors">
+            className="lg:hidden p-2 text-dark-400 hover:text-dark-100 transition-colors focus-ring"
+            aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={mobileOpen}>
             {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
@@ -165,18 +168,18 @@ function Navbar() {
               {['Product', 'Agents', 'Features', 'Pricing'].map((item) => (
                 <a key={item} href={`#${item.toLowerCase()}`}
                   onClick={() => setMobileOpen(false)}
-                  className="block text-sm text-dark-400 hover:text-dark-100 transition-colors py-2">
+                  className="block text-sm text-dark-400 hover:text-dark-100 transition-colors py-2 focus-ring">
                   {item}
                 </a>
               ))}
               <div className="pt-4 border-t border-border flex flex-col gap-3">
                 <Link to={ROUTES.DASHBOARD} onClick={() => setMobileOpen(false)}
-                  className="text-sm text-dark-300 hover:text-dark-100 transition-colors py-2">
+                  className="text-sm text-dark-300 hover:text-dark-100 transition-colors py-2 focus-ring">
                   Sign In
                 </Link>
                 <Link to={ROUTES.DASHBOARD} onClick={() => setMobileOpen(false)}
                   className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-medium text-white 
-                    bg-gradient-to-r from-primary-600 to-primary-500 rounded-xl">
+                    bg-gradient-to-r from-primary-600 to-primary-500 rounded-xl focus-ring">
                   Get Started <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
@@ -718,7 +721,9 @@ function FAQ() {
               <button
                 onClick={() => setOpenIndex(openIndex === i ? null : i)}
                 className="w-full flex items-center justify-between p-5 lg:p-6 text-left
-                  hover:bg-surface-alt/30 transition-colors duration-200"
+                  hover:bg-surface-alt/30 transition-colors duration-200 focus-ring"
+                aria-expanded={openIndex === i}
+                aria-controls={`faq-answer-${i}`}
               >
                 <span className="text-sm font-medium text-dark-200 pr-4">{faq.q}</span>
                 <ChevronDown className={`h-4 w-4 text-dark-500 shrink-0 transition-transform duration-300 ${
@@ -734,7 +739,7 @@ function FAQ() {
                     transition={{ duration: 0.3 }}
                     className="overflow-hidden"
                   >
-                    <p className="px-5 lg:px-6 pb-5 lg:pb-6 text-sm text-dark-400 leading-relaxed">{faq.a}</p>
+                    <p id={`faq-answer-${i}`} className="px-5 lg:px-6 pb-5 lg:pb-6 text-sm text-dark-400 leading-relaxed">{faq.a}</p>
                   </motion.div>
                 )}
               </AnimatePresence>

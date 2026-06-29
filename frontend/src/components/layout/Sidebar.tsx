@@ -19,20 +19,31 @@ export function Sidebar() {
   const { sidebarOpen, toggleSidebar, isMobile } = useAppStore()
   const location = useLocation()
 
+  const handleNavClick = () => {
+    if (isMobile) {
+      useAppStore.getState().setSidebarOpen(false)
+    }
+  }
+
   return (
     <motion.aside
       initial={false}
-      animate={{ width: sidebarOpen ? 240 : 64 }}
+      animate={{
+        width: isMobile ? (sidebarOpen ? 280 : 0) : (sidebarOpen ? 240 : 64),
+        x: isMobile && !sidebarOpen ? -280 : 0,
+      }}
       className={cn(
         'fixed left-0 top-0 h-screen bg-dark-950 border-r border-dark-800 z-40 flex flex-col',
-        isMobile && !sidebarOpen && 'hidden',
+        isMobile && !sidebarOpen && 'pointer-events-none',
       )}
+      role="navigation"
+      aria-label="Main navigation"
     >
       <div className={cn(
         'flex items-center h-14 px-3 border-b border-dark-800 shrink-0',
         sidebarOpen ? 'justify-between' : 'justify-center',
       )}>
-        <NavLink to="/" className="flex items-center gap-2.5">
+        <NavLink to="/" className="flex items-center gap-2.5" onClick={handleNavClick} aria-label="Go to home">
           <motion.div whileHover={{ rotate: 180 }} transition={{ duration: 0.5 }}>
             <Hexagon className="h-7 w-7 text-primary-400" />
           </motion.div>
@@ -51,7 +62,8 @@ export function Sidebar() {
         </NavLink>
         {sidebarOpen && (
           <button onClick={toggleSidebar}
-            className="p-1.5 rounded-lg text-dark-500 hover:text-dark-300 hover:bg-dark-800 transition-colors">
+            aria-label={isMobile ? 'Close navigation menu' : 'Collapse sidebar'}
+            className="p-1.5 rounded-lg text-dark-500 hover:text-dark-300 hover:bg-dark-800 transition-colors focus-ring">
             <ChevronLeft className="h-4 w-4" />
           </button>
         )}
@@ -65,15 +77,17 @@ export function Sidebar() {
             <NavLink
               key={item.path}
               to={item.path}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                isActive
+              onClick={handleNavClick}
+              aria-current={isActive ? 'page' : undefined}
+              className={({ isActive: active }) => cn(
+                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 focus-ring',
+                active
                   ? 'bg-primary-500/10 text-primary-400'
                   : 'text-dark-400 hover:text-dark-200 hover:bg-dark-800',
                 !sidebarOpen && 'justify-center px-2',
               )}
             >
-              <Icon className="h-5 w-5 shrink-0" />
+              <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
               <AnimatePresence mode="wait">
                 {sidebarOpen && (
                   <motion.span
@@ -91,10 +105,11 @@ export function Sidebar() {
         })}
       </nav>
 
-      {!sidebarOpen && (
+      {!sidebarOpen && !isMobile && (
         <div className="p-2 border-t border-dark-800 shrink-0">
           <button onClick={toggleSidebar}
-            className="w-full p-2 rounded-lg text-dark-500 hover:text-dark-300 hover:bg-dark-800 transition-colors">
+            aria-label="Expand sidebar"
+            className="w-full p-2 rounded-lg text-dark-500 hover:text-dark-300 hover:bg-dark-800 transition-colors focus-ring">
             <ChevronRight className="h-4 w-4 mx-auto" />
           </button>
         </div>

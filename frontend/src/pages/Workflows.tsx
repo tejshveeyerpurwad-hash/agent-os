@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Workflow as WorkflowIcon, Play, Pause, CheckCircle2, Loader2, XCircle, Clock, Bot, Plus, Search, ArrowRight, Terminal, Sparkles, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@/utils/cn'
@@ -64,10 +64,10 @@ export function Workflows() {
   const [runInput, setRunInput] = useState('')
   const [selectedWorkflow, setSelectedWorkflow] = useState<WorkflowDefinition | null>(null)
 
-  const filtered = workflowDefs.filter(w =>
+  const filtered = useMemo(() => workflowDefs.filter(w =>
     w.name.toLowerCase().includes(search.toLowerCase()) ||
     w.description.toLowerCase().includes(search.toLowerCase())
-  )
+  ), [search])
 
   function toggleSteps(id: string) {
     setExpandedSteps(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
@@ -99,7 +99,7 @@ export function Workflows() {
   }
 
   return (
-    <div className="p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl lg:text-2xl font-bold text-dark-100 tracking-tight">Workflows</h1>
@@ -112,7 +112,8 @@ export function Workflows() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-500" />
         <input value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Search workflows..."
-          className="w-full pl-9 pr-3 py-2 rounded-lg bg-dark-800/50 border border-dark-700 text-sm text-dark-200 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40" />
+          aria-label="Search workflows"
+          className="focus-ring w-full pl-9 pr-3 py-2 rounded-lg bg-dark-800/50 border border-dark-700 text-sm text-dark-200 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40" />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
@@ -130,35 +131,38 @@ export function Workflows() {
                 isRunning ? 'border-primary-500/30' : 'border-dark-800 hover:border-dark-700',
               )}
             >
-              <div className="p-4">
+              <div className="p-3 sm:p-4">
                 <div className="flex items-start gap-3 mb-3">
                   <div className={cn(
-                    'p-2.5 rounded-lg',
+                    'p-2.5 rounded-lg shrink-0',
                     isRunning ? 'bg-primary-500/10 text-primary-400' : 'bg-accent-500/10 text-accent-400',
                   )}>
                     {isRunning ? <Loader2 className="h-5 w-5 animate-spin" /> : <WorkflowIcon className="h-5 w-5" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-dark-100">{wf.name}</p>
-                      <Badge variant={isRunning ? 'primary' : 'default'} size="sm">
+                      <p className="text-sm font-semibold text-dark-100 truncate">{wf.name}</p>
+                      <Badge variant={isRunning ? 'primary' : 'default'} size="sm" className="shrink-0">
                         {isRunning ? 'Running' : `${wf.runCount} runs`}
                       </Badge>
                     </div>
-                    <p className="text-xs text-dark-400 mt-0.5">{wf.description}</p>
+                    <p className="text-xs text-dark-400 mt-0.5 truncate">{wf.description}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 mb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 mb-3">
                   {wf.steps.slice(0, 4).map((step, si) => (
                     <React.Fragment key={step.id}>
                       <div className={cn(
-                        'px-2 py-0.5 rounded text-[10px] font-medium',
+                        'px-2 py-0.5 rounded text-[10px] font-medium truncate',
                         isRunning && selectedWorkflow?.id === wf.id && si === 0 ? 'bg-primary-500/10 text-primary-400' :
                         'bg-dark-800 text-dark-500',
                       )}>{step.name.slice(0, 12)}</div>
                       {si < wf.steps.length - 1 && (
-                        <ArrowRight className="h-3 w-3 text-dark-600 shrink-0" />
+                        <>
+                          <ArrowRight className="h-3 w-3 text-dark-600 shrink-0 hidden sm:block" />
+                          <ArrowRight className="h-3 w-3 text-dark-600 shrink-0 block sm:hidden rotate-90" />
+                        </>
                       )}
                     </React.Fragment>
                   ))}
@@ -166,17 +170,18 @@ export function Workflows() {
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs text-dark-500">
-                    <Bot className="h-3.5 w-3.5" />
+                    <Bot className="h-3.5 w-3.5 shrink-0" />
                     <span>{[...new Set(wf.steps.map(s => s.agentId))].length} agents</span>
-                    <Clock className="h-3.5 w-3.5 ml-1" />
+                    <Clock className="h-3.5 w-3.5 ml-1 shrink-0" />
                     <span>{wf.steps.length} steps</span>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => runWorkflow(wf)}
                       disabled={isRunning}
+                      aria-label={isRunning ? `Running ${wf.name}` : `Run ${wf.name}`}
                       className={cn(
-                        'px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all',
+                        'focus-ring shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all',
                         isRunning ? 'bg-dark-800 text-dark-500 cursor-not-allowed' :
                         'bg-primary-500 text-white hover:bg-primary-600',
                       )}
@@ -185,7 +190,10 @@ export function Workflows() {
                       {isRunning ? 'Running...' : 'Run'}
                     </button>
                     <button onClick={() => toggleSteps(wf.id)}
-                      className="p-1.5 rounded-lg text-dark-500 hover:text-dark-300 hover:bg-dark-800 transition-colors">
+                      aria-expanded={isExpanded}
+                      aria-controls={`steps-${wf.id}`}
+                      aria-label={isExpanded ? `Collapse steps for ${wf.name}` : `Expand steps for ${wf.name}`}
+                      className="focus-ring p-1.5 rounded-lg text-dark-500 hover:text-dark-300 hover:bg-dark-800 transition-colors shrink-0">
                       {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </button>
                   </div>
@@ -198,7 +206,7 @@ export function Workflows() {
                     initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }}
                     className="overflow-hidden border-t border-dark-800"
                   >
-                    <div className="p-4 space-y-2">
+                    <div id={`steps-${wf.id}`} className="p-3 sm:p-4 space-y-2">
                       <p className="text-[10px] font-semibold text-dark-500 uppercase tracking-wider mb-2">Steps</p>
                       {wf.steps.map((step, si) => {
                         const agent = agents.find(a => a.id === step.agentId)
@@ -209,7 +217,7 @@ export function Workflows() {
                               'bg-dark-800 text-dark-500',
                             )}>{si + 1}</div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs text-dark-300">{step.name}</p>
+                              <p className="text-xs text-dark-300 truncate">{step.name}</p>
                               <div className="flex items-center gap-2">
                                 {agent && <span className="text-[10px] text-dark-500">{agent.name}</span>}
                                 {step.requiresApproval && (
@@ -220,7 +228,7 @@ export function Workflows() {
                               </div>
                             </div>
                             {step.dependsOn.length > 0 && (
-                              <span className="text-[10px] text-dark-600">after step {wf.steps.findIndex(s => s.id === step.dependsOn[0]) + 1}</span>
+                              <span className="text-[10px] text-dark-600 shrink-0">after step {wf.steps.findIndex(s => s.id === step.dependsOn[0]) + 1}</span>
                             )}
                           </div>
                         )

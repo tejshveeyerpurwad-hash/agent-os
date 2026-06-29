@@ -41,12 +41,12 @@ export function Workspace() {
   const busyAgents = agents.filter(a => a.status === 'running')
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-x-hidden">
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto p-4 lg:p-8 space-y-6">
+        <div className="max-w-5xl mx-auto p-3 sm:p-4 lg:p-8 space-y-6">
           <div>
             <h1 className="text-xl lg:text-2xl font-bold text-dark-100 tracking-tight">Workspace</h1>
-            <p className="text-sm text-dark-400 mt-0.5">
+            <p id="objective-hint" className="text-sm text-dark-400 mt-0.5">
               Enter a business objective. The Planner decomposes it, assigns agents, and executes tasks in parallel.
             </p>
           </div>
@@ -63,11 +63,13 @@ export function Workspace() {
                 placeholder={isProcessing ? 'Execution in progress...' : 'Describe a business objective...'}
                 disabled={isProcessing}
                 rows={2}
-                className="w-full bg-transparent px-4 py-3 text-sm text-dark-100 placeholder:text-dark-500 resize-none focus:outline-none disabled:opacity-50"
+                aria-label="Business objective input"
+                aria-describedby="objective-hint"
+                className="w-full bg-transparent px-4 py-3 text-sm text-dark-100 placeholder:text-dark-500 resize-none focus:outline-none disabled:opacity-50 focus-ring"
               />
             </div>
             <div className="flex items-center justify-between px-4 py-2.5 border-t border-dark-800">
-              <div className="flex items-center gap-2 text-xs text-dark-500">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-dark-500">
                 {isProcessing ? (
                   <span className="flex items-center gap-1.5 text-primary-400">
                     <Loader2 className="h-3 w-3 animate-spin" /> Processing...
@@ -80,7 +82,8 @@ export function Workspace() {
                     <span className="text-dark-600">Try:</span>
                     {demos.map(d => (
                       <button key={d} type="button" onClick={() => { setInput(d); inputRef.current?.focus() }}
-                        className="text-dark-500 hover:text-primary-400 transition-colors truncate max-w-[140px]">
+                        aria-label={`${d} (demo prompt)`}
+                        className="text-dark-500 hover:text-primary-400 transition-colors truncate max-w-[140px] shrink-0 focus-ring">
                         {d}
                       </button>
                     ))}
@@ -90,14 +93,16 @@ export function Workspace() {
               <div className="flex items-center gap-2">
                 {isProcessing && (
                   <button type="button" onClick={cancelExecution}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors">
+                    aria-label="Cancel execution"
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors focus-ring">
                     Cancel
                   </button>
                 )}
                 <button type="submit"
                   disabled={!input.trim() || isProcessing}
+                  aria-label={isProcessing ? 'Executing objective' : 'Execute objective'}
                   className={cn(
-                    'px-4 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all',
+                    'px-4 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all focus-ring',
                     isProcessing ? 'bg-dark-800 text-dark-500 cursor-not-allowed' :
                     input.trim() ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-dark-800 text-dark-500 cursor-not-allowed',
                   )}>
@@ -131,7 +136,7 @@ export function Workspace() {
                   <h3 className="text-xs font-semibold text-dark-300 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                     <ListChecks className="h-3.5 w-3.5" /> Execution Log
                   </h3>
-                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                  <div className="space-y-1 max-h-60 overflow-y-auto">
                     {currentExecution.history.map((h, i) => (
                       <motion.div
                         key={i}
@@ -180,7 +185,7 @@ export function Workspace() {
                     <CheckCircle2 className="h-5 w-5 text-emerald-400" />
                     <h3 className="text-sm font-semibold text-emerald-400">Objective Completed</h3>
                   </div>
-                  <pre className="text-xs text-dark-300 whitespace-pre-wrap font-sans leading-relaxed">
+                  <pre className="text-xs text-dark-300 whitespace-pre-wrap font-sans leading-relaxed break-words">
                     {currentExecution.result}
                   </pre>
                 </motion.div>
@@ -200,7 +205,8 @@ export function Workspace() {
               <div className="mt-6 flex flex-wrap justify-center gap-2">
                 {demos.map(ex => (
                   <button key={ex} onClick={() => { setInput(ex); inputRef.current?.focus() }}
-                    className="px-3 py-1.5 rounded-lg bg-dark-800/50 border border-dark-700 text-xs text-dark-400 hover:text-dark-300 hover:border-dark-600 transition-all">
+                    aria-label={`${ex} (demo prompt)`}
+                    className="px-3 py-1.5 rounded-lg bg-dark-800/50 border border-dark-700 text-xs text-dark-400 hover:text-dark-300 hover:border-dark-600 transition-all focus-ring">
                     {ex}
                   </button>
                 ))}
@@ -211,7 +217,8 @@ export function Workspace() {
           {executions.length > 0 && (
             <div className="rounded-xl border border-dark-800 bg-dark-900/50">
               <button onClick={() => setShowHistory(!showHistory)}
-                className="w-full px-4 py-3 flex items-center justify-between text-xs text-dark-400 hover:text-dark-300">
+                aria-label="Toggle execution history"
+                className="w-full px-4 py-3 flex items-center justify-between text-xs text-dark-400 hover:text-dark-300 focus-ring">
                 <span>Recent Executions ({executions.length})</span>
                 <ArrowRight className={cn('h-3.5 w-3.5 transition-transform', showHistory && 'rotate-90')} />
               </button>

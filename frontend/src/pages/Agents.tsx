@@ -34,6 +34,8 @@ export function Agents() {
   const [search, setSearch] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [runningTask, setRunningTask] = useState<string | null>(null)
+  const [memoriesOpen, setMemoriesOpen] = useState<Record<string, boolean>>({})
+  const [logsOpen, setLogsOpen] = useState<Record<string, boolean>>({})
 
   const filtered = agents.filter(a =>
     a.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -48,7 +50,7 @@ export function Agents() {
   }
 
   return (
-    <div className="p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-6 max-w-7xl mx-auto overflow-x-hidden">
       <div>
         <h1 className="text-xl lg:text-2xl font-bold text-dark-100 tracking-tight">AI Agents</h1>
         <p className="text-sm text-dark-400 mt-0.5">
@@ -60,15 +62,18 @@ export function Agents() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-500" />
         <input value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Search agents..."
-          className="w-full pl-9 pr-3 py-2 rounded-lg bg-dark-800/50 border border-dark-700 text-sm text-dark-200 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40" />
+          aria-label="Search agents"
+          className="w-full pl-9 pr-3 py-2 rounded-lg bg-dark-800/50 border border-dark-700 text-sm text-dark-200 placeholder:text-dark-500 focus-ring focus:outline-none focus:ring-2 focus:ring-primary-500/40" />
       </div>
 
-      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         {filtered.map((state, i) => {
           const meta = metaMap[state.id] || { color: 'border-dark-700 bg-dark-800/30', textColor: 'text-dark-400' }
           const isExpanded = expandedId === state.id
           const isRunning = runningTask === state.id
           const logs = agentLogs[state.id] || []
+          const isMemoryOpen = memoriesOpen[state.id] ?? false
+          const isLogOpen = logsOpen[state.id] ?? false
 
           return (
             <motion.div
@@ -76,21 +81,21 @@ export function Agents() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
-              className={cn('rounded-xl border bg-dark-900/50 overflow-hidden transition-all duration-200', meta.color)}
+              className={cn('min-w-0 rounded-xl border bg-dark-900/50 overflow-hidden transition-all duration-200', meta.color)}
             >
-              <div className="p-4">
+              <div className="p-3 sm:p-4">
                 <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className={cn('w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center', meta.color.replace('border-', ''))}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={cn('w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0', meta.color.replace('border-', ''))}>
                       <Bot className={cn('h-5 w-5', meta.textColor)} />
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-dark-100">{state.name}</p>
-                      <p className="text-[11px] text-dark-500">{state.role}</p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-dark-100 truncate">{state.name}</p>
+                      <p className="text-[11px] text-dark-500 truncate">{state.role}</p>
                     </div>
                   </div>
                   <div className={cn(
-                    'w-2.5 h-2.5 rounded-full border-2 border-dark-900',
+                    'w-2.5 h-2.5 rounded-full border-2 border-dark-900 shrink-0',
                     state.status === 'running' ? 'bg-emerald-400 animate-pulse' :
                     state.status === 'idle' ? 'bg-dark-500' :
                     state.status === 'paused' ? 'bg-amber-400' :
@@ -99,17 +104,17 @@ export function Agents() {
                   )} />
                 </div>
 
-                <p className="text-[11px] text-dark-400 leading-relaxed mb-3 line-clamp-2">{state.description}</p>
+                <p className="text-[11px] text-dark-400 leading-relaxed mb-3 line-clamp-2 break-words">{state.description}</p>
 
                 {state.currentTask && (
                   <div className="flex items-center gap-1.5 mb-2 px-2 py-1.5 rounded bg-dark-800/50">
                     <Loader2 className="h-3 w-3 animate-spin text-primary-400 shrink-0" />
-                    <span className="text-[10px] text-dark-400">{state.currentTask}</span>
+                    <span className="text-[10px] text-dark-400 truncate">{state.currentTask}</span>
                   </div>
                 )}
 
                 <div className="flex items-center gap-3 text-xs">
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex justify-between text-[10px] mb-1">
                       <span className="text-dark-500">Confidence</span>
                       <span className="text-dark-300 font-medium">{state.confidence}%</span>
@@ -129,12 +134,13 @@ export function Agents() {
                 </div>
               </div>
 
-              <div className="px-4 pb-4 flex items-center gap-2">
+              <div className="px-3 sm:px-4 pb-3 sm:pb-4 flex items-center gap-2">
                 <button
                   onClick={() => runDemoTask(state.id)}
                   disabled={isRunning || state.status === 'running'}
+                  aria-label={`Execute ${state.name} task`}
                   className={cn(
-                    'flex-1 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all',
+                    'flex-1 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all focus-ring',
                     isRunning ? 'bg-dark-800 text-dark-500 cursor-not-allowed' :
                     'bg-dark-800 text-dark-300 hover:bg-dark-700 hover:text-dark-100',
                   )}
@@ -148,7 +154,10 @@ export function Agents() {
                 </button>
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : state.id)}
-                  className="p-1.5 rounded-lg text-dark-500 hover:text-dark-300 hover:bg-dark-800 transition-colors"
+                  aria-label="Toggle agent details"
+                  aria-expanded={isExpanded}
+                  aria-controls={`agent-details-${state.id}`}
+                  className="p-1.5 rounded-lg text-dark-500 hover:text-dark-300 hover:bg-dark-800 transition-colors focus-ring"
                 >
                   {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </button>
@@ -157,10 +166,11 @@ export function Agents() {
               <AnimatePresence>
                 {isExpanded && (
                   <motion.div
+                    id={`agent-details-${state.id}`}
                     initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }}
                     className="overflow-hidden border-t border-dark-800"
                   >
-                    <div className="p-4 space-y-3">
+                    <div className="p-3 sm:p-4 space-y-3">
                       <div>
                         <p className="text-[10px] font-semibold text-dark-500 uppercase tracking-wider mb-1.5">Capabilities</p>
                         <div className="flex flex-wrap gap-1">
@@ -171,40 +181,60 @@ export function Agents() {
                       </div>
 
                       <div>
-                        <p className="text-[10px] font-semibold text-dark-500 uppercase tracking-wider mb-1.5">Memory</p>
-                        <div className="space-y-1">
-                          {state.memory.slice(0, 4).map((m, i) => (
-                            <p key={i} className="text-[10px] text-dark-400 flex items-start gap-1.5">
-                              <Brain className="h-3 w-3 text-dark-600 shrink-0 mt-0.5" />
-                              <span className="line-clamp-1">{m}</span>
-                            </p>
-                          ))}
-                        </div>
+                        <button
+                          onClick={() => setMemoriesOpen(prev => ({ ...prev, [state.id]: !isMemoryOpen }))}
+                          aria-label="Toggle memory section"
+                          aria-expanded={isMemoryOpen}
+                          aria-controls={`memory-${state.id}`}
+                          className="flex items-center gap-1 text-[10px] font-semibold text-dark-500 uppercase tracking-wider mb-1.5 focus-ring"
+                        >
+                          {isMemoryOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                          Memory
+                        </button>
+                        {isMemoryOpen && (
+                          <div id={`memory-${state.id}`} className="space-y-1">
+                            {state.memory.slice(0, 4).map((m, i) => (
+                              <p key={i} className="text-[10px] text-dark-400 flex items-start gap-1.5">
+                                <Brain className="h-3 w-3 text-dark-600 shrink-0 mt-0.5" />
+                                <span className="truncate">{m}</span>
+                              </p>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       <div>
                         <p className="text-[10px] font-semibold text-dark-500 uppercase tracking-wider mb-1.5">Last Action</p>
-                        <p className="text-[11px] text-dark-400">{state.lastAction}</p>
+                        <p className="text-[11px] text-dark-400 break-words">{state.lastAction}</p>
                       </div>
 
                       {logs.length > 0 && (
                         <div>
-                          <p className="text-[10px] font-semibold text-dark-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                          <button
+                            onClick={() => setLogsOpen(prev => ({ ...prev, [state.id]: !isLogOpen }))}
+                            aria-label="Toggle activity log"
+                            aria-expanded={isLogOpen}
+                            aria-controls={`log-${state.id}`}
+                            className="text-[10px] font-semibold text-dark-500 uppercase tracking-wider mb-1.5 flex items-center gap-1 focus-ring"
+                          >
+                            {isLogOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                             <ListChecks className="h-3 w-3" /> Activity Log ({logs.length})
-                          </p>
-                          <div className="space-y-1 max-h-32 overflow-y-auto">
-                            {logs.map((log, i) => (
-                              <div key={i} className="flex items-start gap-1.5 text-[10px]">
-                                <div className={cn(
-                                  'w-1.5 h-1.5 rounded-full mt-1 shrink-0',
-                                  log.severity === 'success' ? 'bg-emerald-400' :
-                                  log.severity === 'warning' ? 'bg-amber-400' :
-                                  log.severity === 'error' ? 'bg-red-400' : 'bg-dark-500',
-                                )} />
-                                <span className="text-dark-500">{log.detail}</span>
-                              </div>
-                            ))}
-                          </div>
+                          </button>
+                          {isLogOpen && (
+                            <div id={`log-${state.id}`} className="space-y-1 max-h-32 overflow-y-auto">
+                              {logs.map((log, i) => (
+                                <div key={i} className="flex items-start gap-1.5 text-[10px]">
+                                  <div className={cn(
+                                    'w-1.5 h-1.5 rounded-full mt-1 shrink-0',
+                                    log.severity === 'success' ? 'bg-emerald-400' :
+                                    log.severity === 'warning' ? 'bg-amber-400' :
+                                    log.severity === 'error' ? 'bg-red-400' : 'bg-dark-500',
+                                  )} />
+                                  <span className="text-dark-500 break-words">{log.detail}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

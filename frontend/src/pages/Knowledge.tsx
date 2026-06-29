@@ -34,6 +34,13 @@ export function Knowledge() {
     setIsDetailOpen(true)
   }
 
+  function handleItemKeyDown(e: React.KeyboardEvent, item: typeof items[0]) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleSelect(item)
+    }
+  }
+
   const typeCounts = items.reduce((acc, item) => {
     acc[item.type] = (acc[item.type] || 0) + 1
     return acc
@@ -43,7 +50,7 @@ export function Knowledge() {
   const filtered = selectedType ? visible.filter(i => i.type === selectedType) : visible
 
   return (
-    <div className="p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl lg:text-2xl font-bold text-dark-100 tracking-tight">Knowledge</h1>
@@ -53,14 +60,16 @@ export function Knowledge() {
       </div>
 
       <div className="flex gap-3">
-        <div className="relative flex-1 max-w-lg">
+        <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-500" />
           <input value={query} onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleSearch() }}
             placeholder="Search documents, policies, employees, customers..."
-            className="w-full pl-9 pr-12 py-2.5 rounded-lg bg-dark-800/50 border border-dark-700 text-sm text-dark-200 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40" />
+            aria-label="Search knowledge"
+            className="w-full pl-9 pr-12 py-2.5 rounded-lg bg-dark-800/50 border border-dark-700 text-sm text-dark-200 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus-ring" />
           <button onClick={handleSearch}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-1 rounded bg-primary-500/10 text-[10px] text-primary-400 font-medium hover:bg-primary-500/20 transition-colors">
+            aria-label="Submit search"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-1 rounded bg-primary-500/10 text-[10px] text-primary-400 font-medium hover:bg-primary-500/20 transition-colors focus-ring">
             Search
           </button>
         </div>
@@ -71,9 +80,29 @@ export function Knowledge() {
           <Sparkles className="h-3.5 w-3.5 text-primary-400" />
           {isLoading ? 'Searching...' : `Found ${searchResults.length} results for "${searchQuery}"`}
           <button onClick={() => { setQuery(''); useKnowledgeStore.getState().clearSearch() }}
-            className="text-primary-400 hover:text-primary-300">Clear</button>
+            className="text-primary-400 hover:text-primary-300 focus-ring">Clear</button>
         </div>
       )}
+
+      <div className="flex lg:hidden overflow-x-auto gap-2 pb-1 scrollbar-none">
+        {Object.entries(typeConfig).map(([type, cfg]) => {
+          const Icon = cfg.icon
+          return (
+            <button key={type}
+              onClick={() => setSelectedType(type === selectedType ? null : type)}
+              aria-label={`Filter by ${cfg.label}`}
+              aria-pressed={selectedType === type}
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs whitespace-nowrap transition-all focus-ring',
+                selectedType === type ? 'bg-primary-500/10 text-primary-400' : 'text-dark-400 hover:text-dark-300 hover:bg-dark-800/50',
+              )}>
+              <Icon className="h-3 w-3" />
+              <span>{cfg.label}</span>
+              <span className="text-dark-500">({typeCounts[type] || 0})</span>
+            </button>
+          )
+        })}
+      </div>
 
       <div className="grid lg:grid-cols-4 gap-6">
         <div className="hidden lg:block space-y-1">
@@ -82,8 +111,10 @@ export function Knowledge() {
             const Icon = cfg.icon
             return (
               <button key={type} onClick={() => setSelectedType(type === selectedType ? null : type)}
+                aria-label={`Filter by ${cfg.label}`}
+                aria-pressed={selectedType === type}
                 className={cn(
-                  'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs transition-all',
+                  'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs transition-all focus-ring',
                   selectedType === type ? 'bg-primary-500/10 text-primary-400' : 'text-dark-400 hover:text-dark-300 hover:bg-dark-800/50',
                 )}>
                 <div className={cn('p-1 rounded', cfg.color)}>
@@ -96,49 +127,54 @@ export function Knowledge() {
           })}
         </div>
 
-        <div className="lg:col-span-3 space-y-3">
+        <div className="lg:col-span-3">
           {filtered.length === 0 ? (
             <div className="text-center py-12">
               <BookOpen className="h-8 w-8 text-dark-600 mx-auto mb-2" />
               <p className="text-sm text-dark-500">No items found</p>
             </div>
           ) : (
-            filtered.map((item, i) => {
-              const cfg = typeConfig[item.type] || typeConfig.document
-              const Icon = cfg.icon
-              return (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.02 }}
-                  onClick={() => handleSelect(item)}
-                  className="group rounded-xl border border-dark-800 bg-dark-900/50 p-4 hover:border-dark-700 transition-all duration-200 cursor-pointer"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={cn('p-2.5 rounded-lg shrink-0', cfg.color)}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-semibold text-dark-100">{item.title}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {filtered.map((item, i) => {
+                const cfg = typeConfig[item.type] || typeConfig.document
+                const Icon = cfg.icon
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.02 }}
+                    onClick={() => handleSelect(item)}
+                    onKeyDown={(e) => handleItemKeyDown(e, item)}
+                    role="button"
+                    tabIndex={0}
+                    className="group rounded-xl border border-dark-800 bg-dark-900/50 p-4 hover:border-dark-700 transition-all duration-200 cursor-pointer focus-ring"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={cn('p-2.5 rounded-lg shrink-0', cfg.color)}>
+                        <Icon className="h-5 w-5" />
                       </div>
-                      <p className="text-xs text-dark-400 line-clamp-2 mb-2">{item.content}</p>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={cn('text-[10px] px-1.5 py-0.5 rounded border', cfg.color)}>{cfg.label}</span>
-                        {item.tags.slice(0, 3).map(tag => (
-                          <span key={tag} className="text-[10px] text-dark-500 bg-dark-800/50 px-1.5 py-0.5 rounded">{tag}</span>
-                        ))}
-                        <span className="text-[10px] text-dark-600">
-                          Updated {new Date(item.updatedAt).toLocaleDateString()}
-                        </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-semibold text-dark-100 truncate">{item.title}</p>
+                        </div>
+                        <p className="text-xs text-dark-400 line-clamp-2 mb-2">{item.content}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={cn('text-[10px] px-1.5 py-0.5 rounded border', cfg.color)}>{cfg.label}</span>
+                          {item.tags.slice(0, 3).map(tag => (
+                            <span key={tag} className="text-[10px] text-dark-500 bg-dark-800/50 px-1.5 py-0.5 rounded">{tag}</span>
+                          ))}
+                          <span className="text-[10px] text-dark-600">
+                            Updated {new Date(item.updatedAt).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
+                      <ChevronRight className="h-4 w-4 text-dark-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-1" />
                     </div>
-                    <ChevronRight className="h-4 w-4 text-dark-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-1" />
-                  </div>
-                </motion.div>
-              )
-            })
+                  </motion.div>
+                )
+              })}
+            </div>
           )}
         </div>
       </div>
@@ -149,7 +185,7 @@ export function Knowledge() {
           const related = getRelated(selectedItem)
           return (
             <div className="space-y-5">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className={cn('text-[11px] px-1.5 py-0.5 rounded border', cfg.color)}>{cfg.label}</span>
                 {selectedItem.tags.map(tag => (
                   <span key={tag} className="text-[11px] px-1.5 py-0.5 rounded bg-dark-800 text-dark-400 border border-dark-700">{tag}</span>
@@ -170,9 +206,9 @@ export function Knowledge() {
                     {related.map(r => (
                       <button key={r.id}
                         onClick={() => { selectItem(r); useKnowledgeStore.getState(); setIsDetailOpen(true) }}
-                        className="w-full text-left flex items-center gap-2 p-2 rounded-lg bg-dark-800/30 text-xs text-dark-400 hover:text-dark-300 hover:bg-dark-800/50 transition-colors">
+                        className="w-full text-left flex items-center gap-2 p-2 rounded-lg bg-dark-800/30 text-xs text-dark-400 hover:text-dark-300 hover:bg-dark-800/50 transition-colors focus-ring">
                         <FileText className="h-3 w-3 shrink-0" />
-                        {r.title}
+                        <span className="truncate">{r.title}</span>
                       </button>
                     ))}
                   </div>
