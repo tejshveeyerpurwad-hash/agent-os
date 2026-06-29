@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   BrainCircuit, ListChecks, Bot, Cpu, Database, FileText, CheckCircle2,
@@ -92,7 +91,6 @@ export function WorkflowExecution({ phase, completedCount, totalCount, objective
             {stages.map((stage, i) => {
               const isActive = i === currentIdx
               const isDone = i < currentIdx
-              const isFuture = i > currentIdx
               const Icon = stage.icon
 
               return (

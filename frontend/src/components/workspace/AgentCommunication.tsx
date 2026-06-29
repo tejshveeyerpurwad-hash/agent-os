@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageSquare, ArrowRight, Bot } from 'lucide-react'
+import { MessageSquare, ArrowRight } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 export interface AgentMessage {

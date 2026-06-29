@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  FileText, Download, TrendingUp, Target, Lightbulb, BarChart3,
+  FileText, Download, Lightbulb, BarChart3,
   CheckCircle2, X, Loader2,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 interface Metrics {
   label: string

@@ -70,7 +70,7 @@ export function AnalyticsDashboard({ data, isLive }: AnalyticsDashboardProps) {
                   <span className="text-[8px] text-dark-500 truncate">{metric.label}</span>
                 </div>
                 <div className="text-xs font-bold text-dark-100">
-                  {typeof val === 'number' && !metric.suffix ? val.toLocaleString() : val}{typeof val === 'number' ? metric.suffix : ''}
+                  {typeof val === 'number' ? val.toLocaleString() + metric.suffix : String(val)}
                 </div>
               </motion.div>
             )

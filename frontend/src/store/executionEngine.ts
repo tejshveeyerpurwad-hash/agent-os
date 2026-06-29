@@ -6,6 +6,8 @@ import { useActivityStore } from './activityStore'
 import { useKnowledgeStore } from './knowledgeStore'
 import { useLemmaStore } from './lemmaStore'
 import { executeWithLemma } from '@/services/lemmaAdapter'
+import type { AgentMessage } from '@/components/workspace/AgentCommunication'
+import type { NotificationItem } from '@/components/workspace/NotificationCenter'
 
 interface ExecutionState {
   executions: Execution[]
@@ -13,6 +15,10 @@ interface ExecutionState {
   approvals: Approval[]
   isProcessing: boolean
   agentLogs: Record<string, { timestamp: string; action: string; detail: string; severity: string }[]>
+  agentMessages: AgentMessage[]
+  notifications: NotificationItem[]
+  executionCount: number
+  successCount: number
 }
 
 interface ExecutionActions {
@@ -22,9 +28,15 @@ interface ExecutionActions {
   cancelExecution: () => void
   getExecution: (id: string) => Execution | undefined
   clearCompleted: () => void
+  dismissNotification: (id: string) => void
+  markAllNotificationsRead: () => void
+  generateCommunication: () => void
 }
 
 let execCounter = 0
+
+let msgCounter = 0
+let notifCounter = 0
 
 export const useExecutionEngine = create<ExecutionState & ExecutionActions>((set, get) => ({
   executions: [],
@@ -32,6 +44,10 @@ export const useExecutionEngine = create<ExecutionState & ExecutionActions>((set
   approvals: [],
   isProcessing: false,
   agentLogs: {},
+  agentMessages: [],
+  notifications: [],
+  executionCount: 0,
+  successCount: 0,
 
   submitObjective: async (objective: string) => {
     if (!objective.trim() || get().isProcessing) return
@@ -57,12 +73,25 @@ export const useExecutionEngine = create<ExecutionState & ExecutionActions>((set
       totalCount: 0,
     }
 
-    set({
+    set(state => ({
       isProcessing: true,
       currentExecution: execution,
       approvals: [],
       agentLogs: {},
-    })
+      agentMessages: [],
+      notifications: [
+        {
+          id: `notif-${++notifCounter}`,
+          type: 'info',
+          title: 'Execution Started',
+          message: `New objective: "${objective.slice(0, 80)}"`,
+          timestamp: new Date().toISOString(),
+          read: false,
+        },
+        ...state.notifications.slice(0, 49),
+      ],
+      executionCount: state.executionCount + 1,
+    }))
 
     const appendHistory = (phase: ExecutionPhase, detail: string) => {
       set(state => {
@@ -330,6 +359,7 @@ export const useExecutionEngine = create<ExecutionState & ExecutionActions>((set
                   }
                 : null,
             }))
+            get().generateCommunication()
           }
         })
 
@@ -344,6 +374,19 @@ export const useExecutionEngine = create<ExecutionState & ExecutionActions>((set
       allAgentIds.forEach(id => agentsStore.setAgentStatus(id, 'idle'))
 
       if (allCompleted && completedCount > 0) {
+        const successNotif: NotificationItem = {
+          id: `notif-${++notifCounter}`,
+          type: 'success',
+          title: 'Execution Completed',
+          message: `${completedCount}/${subtasks.length} tasks completed — "${objective.slice(0, 80)}"`,
+          timestamp: new Date().toISOString(),
+          read: false,
+        }
+        set(state => ({
+          successCount: state.successCount + 1,
+          notifications: [successNotif, ...state.notifications].slice(0, 50),
+        }))
+
         const finalSummary = generateFinalSummary(objective, subtasks)
         appendHistory('completed', finalSummary)
 
@@ -445,7 +488,48 @@ export const useExecutionEngine = create<ExecutionState & ExecutionActions>((set
 
   getExecution: (id) => get().executions.find(e => e.id === id),
 
-  clearCompleted: () => set({ executions: [], approvals: [], agentLogs: {} }),
+  dismissNotification: (id) => set(state => ({
+    notifications: state.notifications.filter(n => n.id !== id),
+  })),
+
+  markAllNotificationsRead: () => set(state => ({
+    notifications: state.notifications.map(n => ({ ...n, read: true })),
+  })),
+
+  generateCommunication: () => {
+    const agents = ['agent-ceo', 'agent-hr', 'agent-finance', 'agent-sales', 'agent-marketing', 'agent-ops', 'agent-legal', 'agent-support']
+    const from = agents[Math.floor(Math.random() * agents.length)]
+    let to = agents[Math.floor(Math.random() * agents.length)]
+    while (to === from) { to = agents[Math.floor(Math.random() * agents.length)] }
+
+    const messages = [
+      'Confirmed. Proceeding with assigned task.',
+      'Requesting additional context for this subtask.',
+      'Data retrieved. Transferring for processing.',
+      'Task complete. Handing off for review.',
+      'Cross-referencing with knowledge base. Results incoming.',
+      'Approval threshold met. Escalating for sign-off.',
+      'Validation passed. Proceeding to next step.',
+      'Anomaly detected. Flagging for team review.',
+      'Metrics captured. Updating shared state.',
+      'Collaboration request acknowledged. Routing to appropriate channel.',
+    ]
+
+    const msg: AgentMessage = {
+      id: `msg-${++msgCounter}`,
+      from,
+      to,
+      message: messages[Math.floor(Math.random() * messages.length)],
+      timestamp: new Date().toISOString(),
+      type: Math.random() > 0.5 ? 'response' : 'request',
+    }
+
+    set(state => ({
+      agentMessages: [...state.agentMessages, msg].slice(-50),
+    }))
+  },
+
+  clearCompleted: () => set({ executions: [], approvals: [], agentLogs: {}, agentMessages: [], notifications: [] }),
 }))
 
 function sleep(ms: number) {

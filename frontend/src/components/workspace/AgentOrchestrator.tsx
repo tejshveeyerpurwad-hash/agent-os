@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bot, Brain, Activity, Clock, ChevronDown, ChevronUp, Cpu, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Bot, Brain, Activity, Clock, ChevronDown, ChevronUp, Cpu, Loader2 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import type { AgentState } from '@/store/agentsStore'
 
