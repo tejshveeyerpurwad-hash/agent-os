@@ -11,6 +11,7 @@ import { Workflows } from '@/pages/Workflows'
 import { Knowledge } from '@/pages/Knowledge'
 import { Analytics } from '@/pages/Analytics'
 import { Activity } from '@/pages/Activity'
+import { Integration } from '@/pages/Integration'
 import { Conversations } from '@/pages/Conversations'
 import { Calendar } from '@/pages/Calendar'
 import { Team } from '@/pages/Team'
@@ -33,6 +34,7 @@ export default function App() {
               <Route path={ROUTES.KNOWLEDGE} element={<Knowledge />} />
               <Route path={ROUTES.ANALYTICS} element={<Analytics />} />
               <Route path={ROUTES.ACTIVITY} element={<Activity />} />
+              <Route path={ROUTES.INTEGRATION} element={<Integration />} />
               <Route path={ROUTES.CONVERSATIONS} element={<Conversations />} />
               <Route path={ROUTES.CALENDAR} element={<Calendar />} />
               <Route path={ROUTES.TEAM} element={<Team />} />

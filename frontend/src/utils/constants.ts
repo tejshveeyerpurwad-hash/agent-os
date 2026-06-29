@@ -12,6 +12,7 @@ export const ROUTES = {
   KNOWLEDGE: '/knowledge',
   ANALYTICS: '/analytics',
   ACTIVITY: '/activity',
+  INTEGRATION: '/integration',
   CONVERSATIONS: '/conversations',
   CALENDAR: '/calendar',
   TEAM: '/team',
@@ -26,6 +27,7 @@ export const NAV_ITEMS = [
   { label: 'Workflows', path: ROUTES.WORKFLOWS, icon: 'Workflow' },
   { label: 'Knowledge', path: ROUTES.KNOWLEDGE, icon: 'BookOpen' },
   { label: 'Activity', path: ROUTES.ACTIVITY, icon: 'Activity' },
+  { label: 'Integration', path: ROUTES.INTEGRATION, icon: 'Box' },
   { label: 'Settings', path: ROUTES.SETTINGS, icon: 'Settings' },
 ] as const
 

@@ -4,6 +4,8 @@ import { analyzeObjective } from './plannerEngine'
 import { useAgentsStore } from './agentsStore'
 import { useActivityStore } from './activityStore'
 import { useKnowledgeStore } from './knowledgeStore'
+import { useLemmaStore } from './lemmaStore'
+import { executeWithLemma } from '@/services/lemmaAdapter'
 
 interface ExecutionState {
   executions: Execution[]
@@ -117,186 +119,254 @@ export const useExecutionEngine = create<ExecutionState & ExecutionActions>((set
       currentExecution: state.currentExecution ? { ...state.currentExecution, phase: 'executing' } : null,
     }))
 
-    const subtasks = [...plan.subtasks]
-    const maxDepth = plan.depthLevels
+    const lemmaStore = useLemmaStore.getState()
+    const lemmaAvailable = lemmaStore.initialized && lemmaStore.client !== null
+    let lemmaSucceeded = false
 
-    for (let depth = 0; depth <= maxDepth; depth++) {
-      const tasksAtDepth = subtasks.filter(s => s.depth === depth)
-
-      if (tasksAtDepth.length === 0) continue
-
-      appendHistory('executing', `Executing group ${depth + 1}/${maxDepth + 1}: ${tasksAtDepth.length} task${tasksAtDepth.length > 1 ? 's' : ''} in parallel`)
-
-      const results = await Promise.allSettled(
-        tasksAtDepth.map(async (subtask) => {
-          subtask.startedAt = new Date().toISOString()
-          subtask.status = 'running'
-
-          set(state => ({
-            currentExecution: state.currentExecution
-              ? { ...state.currentExecution, currentTaskId: subtask.id }
-              : null,
-          }))
-
-          activityStore.addEvent({
-            type: 'agent',
-            action: `${agentsStore.getAgent(subtask.agentId)?.name || subtask.agentId} executing`,
-            detail: subtask.description,
-            agentId: subtask.agentId,
-            executionId: execution.id,
-            severity: 'info',
-          })
-
-          addAgentLog(subtask.agentId, {
-            timestamp: new Date().toISOString(),
-            action: 'Task started',
-            detail: subtask.description,
-            severity: 'info',
-          })
-
-          if (subtask.knowledgeQueries.length > 0) {
-            appendHistory('querying_knowledge', `Querying knowledge: ${subtask.knowledgeQueries.join(', ')}`)
-            subtask.knowledgeQueries.forEach(q => knowledgeStore.search(q))
-            await sleep(200)
-          }
-
-          const needsApproval = subtask.priority === 'high' && (
-            subtask.description.toLowerCase().includes('approv') ||
-            subtask.description.toLowerCase().includes('sign-off') ||
-            subtask.description.toLowerCase().includes('offer') ||
-            subtask.description.toLowerCase().includes('budget') ||
-            subtask.description.toLowerCase().includes('salary') ||
-            subtask.description.toLowerCase().includes('headcount')
-          )
-
-          if (needsApproval) {
-            subtask.status = 'awaiting_approval'
-
-            const approval: Approval = {
-              id: `approval-${Date.now()}-${subtask.id}`,
-              executionId: execution.id,
-              subtaskId: subtask.id,
-              title: `Approve: ${subtask.description.slice(0, 60)}`,
-              description: subtask.description,
-              urgency: subtask.priority === 'high' ? 'high' : 'medium',
-              status: 'pending',
-              createdAt: new Date().toISOString(),
-              resolvedAt: null,
+    if (lemmaAvailable) {
+      appendHistory('executing', 'Lemma SDK detected — using Lemma-backed execution')
+      try {
+        const lemmaResult = await executeWithLemma(
+          objective,
+          execution.id,
+          (phase) => {
+            if (phase === 'completed' || phase === 'failed') {
+              appendHistory(phase as ExecutionPhase, `Lemma execution ${phase}`)
             }
-
-            set(state => ({ approvals: [...state.approvals, approval] }))
-
-            appendHistory('awaiting_approval', `Awaiting approval: ${subtask.description.slice(0, 50)}...`)
-            activityStore.addEvent({
-              type: 'approval',
-              action: 'Approval required',
-              detail: subtask.description,
-              agentId: subtask.agentId,
-              executionId: execution.id,
-              severity: 'warning',
-            })
-
-            addAgentLog(subtask.agentId, {
-              timestamp: new Date().toISOString(),
-              action: 'Awaiting approval',
-              detail: subtask.description,
-              severity: 'warning',
-            })
-
-            set(state => ({
-              currentExecution: state.currentExecution ? { ...state.currentExecution, phase: 'awaiting_approval' } : null,
-            }))
-
-            await sleep(1500)
-
-            const updatedApproval = get().approvals.find(a => a.id === approval.id)
-            if (!updatedApproval || updatedApproval.status === 'pending') {
-              get().approveTask(approval.id)
+          },
+          (entry) => {
+            if (entry.phase === 'executing' || entry.phase === 'querying_knowledge') {
+              appendHistory('executing', entry.detail)
             }
+          },
+        )
+        if (lemmaResult) {
+          lemmaSucceeded = true
+          const totalTasks = plan.subtasks.length
+          const finalSummary = `[Lemma] ${lemmaResult}`
 
-            if (updatedApproval?.status === 'rejected') {
-              subtask.status = 'failed'
-              subtask.completedAt = new Date().toISOString()
-              activityStore.addEvent({
-                type: 'agent',
-                action: 'Task rejected',
-                detail: subtask.description,
-                agentId: subtask.agentId,
-                executionId: execution.id,
-                severity: 'error',
-              })
-              return { id: subtask.id, result: 'Task rejected by user' }
-            }
+          appendHistory('completed', finalSummary)
 
-            set(state => ({
-              currentExecution: state.currentExecution ? { ...state.currentExecution, phase: 'executing' } : null,
-            }))
-          }
-
-          const result = await agentsStore.executeTask(subtask.agentId, subtask.description, execution.id)
-          subtask.status = 'completed'
-          subtask.result = result
-          subtask.completedAt = new Date().toISOString()
-
-          addAgentLog(subtask.agentId, {
-            timestamp: new Date().toISOString(),
-            action: 'Task completed',
-            detail: result.slice(0, 100),
-            severity: 'success',
-          })
-
-          return { id: subtask.id, result }
-        })
-      )
-
-      results.forEach((r, i) => {
-        if (r.status === 'fulfilled') {
-          const task = tasksAtDepth[i]
-          const taskResult = r.value
           set(state => ({
             currentExecution: state.currentExecution
               ? {
                   ...state.currentExecution,
-                  taskResults: { ...state.currentExecution.taskResults, [taskResult.id]: taskResult.result },
-                  completedCount: state.currentExecution.completedCount + 1,
+                  phase: 'completed',
+                  result: finalSummary,
+                  completedAt: new Date().toISOString(),
+                  completedCount: totalTasks,
+                  totalCount: totalTasks,
                 }
               : null,
           }))
-        }
-      })
 
-      if (depth < maxDepth) {
-        await sleep(300)
+          activityStore.addEvent({
+            type: 'execution',
+            action: 'Objective completed via Lemma',
+            detail: `${totalTasks} tasks executed via Lemma SDK across ${allAgentIds.length} agents`,
+            executionId: execution.id,
+            severity: 'success',
+          })
+
+          allAgentIds.forEach(id => agentsStore.setAgentStatus(id, 'idle'))
+
+          const finalExec = get().currentExecution
+          if (finalExec) {
+            set(state => ({
+              executions: [finalExec, ...state.executions].slice(0, 50),
+            }))
+          }
+
+          set({ isProcessing: false })
+          return
+        }
+      } catch {
+        appendHistory('executing', 'Lemma execution failed — falling back to AgentOS simulation')
       }
     }
 
-    const allCompleted = subtasks.every(s => s.status === 'completed' || s.status === 'failed')
-    const completedCount = subtasks.filter(s => s.status === 'completed').length
+    if (!lemmaSucceeded) {
+      const subtasks = [...plan.subtasks]
+      const maxDepth = plan.depthLevels
 
-    allAgentIds.forEach(id => agentsStore.setAgentStatus(id, 'idle'))
+      for (let depth = 0; depth <= maxDepth; depth++) {
+        const tasksAtDepth = subtasks.filter(s => s.depth === depth)
 
-    if (allCompleted && completedCount > 0) {
-      const finalSummary = generateFinalSummary(objective, subtasks)
-      appendHistory('completed', finalSummary)
+        if (tasksAtDepth.length === 0) continue
 
-      set(state => ({
-        currentExecution: state.currentExecution
-          ? {
-              ...state.currentExecution,
-              phase: 'completed',
-              result: finalSummary,
-              completedAt: new Date().toISOString(),
+        appendHistory('executing', `Executing group ${depth + 1}/${maxDepth + 1}: ${tasksAtDepth.length} task${tasksAtDepth.length > 1 ? 's' : ''} in parallel`)
+
+        const results = await Promise.allSettled(
+          tasksAtDepth.map(async (subtask) => {
+            subtask.startedAt = new Date().toISOString()
+            subtask.status = 'running'
+
+            set(state => ({
+              currentExecution: state.currentExecution
+                ? { ...state.currentExecution, currentTaskId: subtask.id }
+                : null,
+            }))
+
+            activityStore.addEvent({
+              type: 'agent',
+              action: `${agentsStore.getAgent(subtask.agentId)?.name || subtask.agentId} executing`,
+              detail: subtask.description,
+              agentId: subtask.agentId,
+              executionId: execution.id,
+              severity: 'info',
+            })
+
+            addAgentLog(subtask.agentId, {
+              timestamp: new Date().toISOString(),
+              action: 'Task started',
+              detail: subtask.description,
+              severity: 'info',
+            })
+
+            if (subtask.knowledgeQueries.length > 0) {
+              appendHistory('querying_knowledge', `Querying knowledge: ${subtask.knowledgeQueries.join(', ')}`)
+              subtask.knowledgeQueries.forEach(q => knowledgeStore.search(q))
+              await sleep(200)
             }
-          : null,
-      }))
 
-      activityStore.addEvent({
-        type: 'execution',
-        action: 'Objective completed successfully',
-        detail: `${completedCount}/${subtasks.length} tasks completed across ${allAgentIds.length} agents`,
-        executionId: execution.id,
-        severity: 'success',
-      })
+            const needsApproval = subtask.priority === 'high' && (
+              subtask.description.toLowerCase().includes('approv') ||
+              subtask.description.toLowerCase().includes('sign-off') ||
+              subtask.description.toLowerCase().includes('offer') ||
+              subtask.description.toLowerCase().includes('budget') ||
+              subtask.description.toLowerCase().includes('salary') ||
+              subtask.description.toLowerCase().includes('headcount')
+            )
+
+            if (needsApproval) {
+              subtask.status = 'awaiting_approval'
+
+              const approval: Approval = {
+                id: `approval-${Date.now()}-${subtask.id}`,
+                executionId: execution.id,
+                subtaskId: subtask.id,
+                title: `Approve: ${subtask.description.slice(0, 60)}`,
+                description: subtask.description,
+                urgency: subtask.priority === 'high' ? 'high' : 'medium',
+                status: 'pending',
+                createdAt: new Date().toISOString(),
+                resolvedAt: null,
+              }
+
+              set(state => ({ approvals: [...state.approvals, approval] }))
+
+              appendHistory('awaiting_approval', `Awaiting approval: ${subtask.description.slice(0, 50)}...`)
+              activityStore.addEvent({
+                type: 'approval',
+                action: 'Approval required',
+                detail: subtask.description,
+                agentId: subtask.agentId,
+                executionId: execution.id,
+                severity: 'warning',
+              })
+
+              addAgentLog(subtask.agentId, {
+                timestamp: new Date().toISOString(),
+                action: 'Awaiting approval',
+                detail: subtask.description,
+                severity: 'warning',
+              })
+
+              set(state => ({
+                currentExecution: state.currentExecution ? { ...state.currentExecution, phase: 'awaiting_approval' } : null,
+              }))
+
+              await sleep(1500)
+
+              const updatedApproval = get().approvals.find(a => a.id === approval.id)
+              if (!updatedApproval || updatedApproval.status === 'pending') {
+                get().approveTask(approval.id)
+              }
+
+              if (updatedApproval?.status === 'rejected') {
+                subtask.status = 'failed'
+                subtask.completedAt = new Date().toISOString()
+                activityStore.addEvent({
+                  type: 'agent',
+                  action: 'Task rejected',
+                  detail: subtask.description,
+                  agentId: subtask.agentId,
+                  executionId: execution.id,
+                  severity: 'error',
+                })
+                return { id: subtask.id, result: 'Task rejected by user' }
+              }
+
+              set(state => ({
+                currentExecution: state.currentExecution ? { ...state.currentExecution, phase: 'executing' } : null,
+              }))
+            }
+
+            const result = await agentsStore.executeTask(subtask.agentId, subtask.description, execution.id)
+            subtask.status = 'completed'
+            subtask.result = result
+            subtask.completedAt = new Date().toISOString()
+
+            addAgentLog(subtask.agentId, {
+              timestamp: new Date().toISOString(),
+              action: 'Task completed',
+              detail: result.slice(0, 100),
+              severity: 'success',
+            })
+
+            return { id: subtask.id, result }
+          })
+        )
+
+        results.forEach((r, i) => {
+          if (r.status === 'fulfilled') {
+            const task = tasksAtDepth[i]
+            const taskResult = r.value
+            set(state => ({
+              currentExecution: state.currentExecution
+                ? {
+                    ...state.currentExecution,
+                    taskResults: { ...state.currentExecution.taskResults, [taskResult.id]: taskResult.result },
+                    completedCount: state.currentExecution.completedCount + 1,
+                  }
+                : null,
+            }))
+          }
+        })
+
+        if (depth < maxDepth) {
+          await sleep(300)
+        }
+      }
+
+      const allCompleted = subtasks.every(s => s.status === 'completed' || s.status === 'failed')
+      const completedCount = subtasks.filter(s => s.status === 'completed').length
+
+      allAgentIds.forEach(id => agentsStore.setAgentStatus(id, 'idle'))
+
+      if (allCompleted && completedCount > 0) {
+        const finalSummary = generateFinalSummary(objective, subtasks)
+        appendHistory('completed', finalSummary)
+
+        set(state => ({
+          currentExecution: state.currentExecution
+            ? {
+                ...state.currentExecution,
+                phase: 'completed',
+                result: finalSummary,
+                completedAt: new Date().toISOString(),
+              }
+            : null,
+        }))
+
+        activityStore.addEvent({
+          type: 'execution',
+          action: 'Objective completed successfully',
+          detail: `${completedCount}/${subtasks.length} tasks completed across ${allAgentIds.length} agents`,
+          executionId: execution.id,
+          severity: 'success',
+        })
+      }
     }
 
     const finalExec = get().currentExecution

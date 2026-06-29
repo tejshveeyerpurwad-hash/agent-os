@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Bot, Workflow, Brain, BarChart3, MessageSquare,
   Calendar, Users, Settings, ChevronLeft, ChevronRight, Hexagon,
-  Terminal, BrainCircuit, Activity as ActivityIcon,
+  Terminal, BrainCircuit, Activity as ActivityIcon, Box,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { NAV_ITEMS } from '@/utils/constants'
@@ -12,7 +12,7 @@ import { useAppStore } from '@/store/appStore'
 const iconMap: Record<string, typeof LayoutDashboard> = {
   LayoutDashboard, Bot, Workflow, Brain, BarChart3,
   MessageSquare, Calendar, Users, Settings,
-  Terminal, BrainCircuit, Activity: ActivityIcon,
+  Terminal, BrainCircuit, Activity: ActivityIcon, Box,
 }
 
 export function Sidebar() {
