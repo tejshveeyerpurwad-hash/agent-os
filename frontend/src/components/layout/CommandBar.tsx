@@ -43,10 +43,6 @@ export function CommandBar() {
     }
   }, [open])
 
-  useEffect(() => {
-    setActiveIndex(-1)
-  }, [input])
-
   function handleKeyDown(e: React.KeyboardEvent) {
     if (!showResults) {
       if (e.key === 'ArrowDown') {

@@ -151,9 +151,9 @@ export function analyzeObjective(input: PlannerInput): ExecutionPlan {
   const domain = primaryDomain?.domain || 'general'
 
   const template = scenarioTemplates[domain]
-  let reasoning: string[] = []
-  let subtaskDescs: SubtaskDesc[] = []
-  let summary = ''
+  let reasoning: string[]
+  let subtaskDescs: SubtaskDesc[]
+  let summary: string
 
   if (template) {
     const result = template(objective)

@@ -61,13 +61,8 @@ export async function executeWithLemma(
         const lemmaAgentName = mapAgentIdToLemma(subtask.agentId)
         const agentMessage = buildAgentMessage(subtask, knowledgeContext, objective)
 
-        let result = ''
         const lemmaResult = await lemmaStore.runAgent(lemmaAgentName, agentMessage)
-        if (lemmaResult) {
-          result = lemmaResult
-        } else {
-          result = await agentsStore.executeTask(subtask.agentId, subtask.description, executionId)
-        }
+        const result = lemmaResult || await agentsStore.executeTask(subtask.agentId, subtask.description, executionId)
 
         subtask.status = 'completed'
         subtask.result = result

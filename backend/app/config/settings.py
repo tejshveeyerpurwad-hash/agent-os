@@ -17,7 +17,12 @@ class Settings(BaseSettings):
     lemma_api_key: str = ""
     lemma_model: str = "gpt-4"
 
-    allowed_origins: list[str] = ["http://localhost:5173"]
+    allowed_origins: list[str] = [
+        "http://localhost:5173",
+        "https://frontend-phi-beige-51.vercel.app",
+        "https://frontend-llfgx9iak-tejshveeyerpurwad-hashs-projects.vercel.app",
+        "https://frontend-2l07fr2fg-tejshveeyerpurwad-hashs-projects.vercel.app",
+    ]
 
     class Config:
         env_file = ".env"
