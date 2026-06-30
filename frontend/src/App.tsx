@@ -3,9 +3,12 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { AuthGuard } from '@/components/layout/AuthGuard'
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary'
+import { ToastContainer } from '@/components/ui/Toast'
 import { ROUTES } from '@/utils/constants'
 
 const Landing = lazy(() => import('@/pages/Landing').then(m => ({ default: m.Landing })))
+const Login = lazy(() => import('@/pages/Login').then(m => ({ default: m.Login })))
+const Register = lazy(() => import('@/pages/Register').then(m => ({ default: m.Register })))
 const Home = lazy(() => import('@/pages/Home').then(m => ({ default: m.Home })))
 const Workspace = lazy(() => import('@/pages/Workspace').then(m => ({ default: m.Workspace })))
 const Planner = lazy(() => import('@/pages/Planner').then(m => ({ default: m.Planner })))
@@ -35,8 +38,11 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        <ToastContainer />
         <Routes>
           <Route path={ROUTES.HOME} element={<Suspense fallback={<PageLoader />}><Landing /></Suspense>} />
+          <Route path={ROUTES.LOGIN} element={<Suspense fallback={<PageLoader />}><Login /></Suspense>} />
+          <Route path={ROUTES.REGISTER} element={<Suspense fallback={<PageLoader />}><Register /></Suspense>} />
           <Route element={<AuthGuard />}>
             <Route element={<MainLayout />}>
               <Route path={ROUTES.DASHBOARD} element={<Suspense fallback={<PageLoader />}><Home /></Suspense>} />

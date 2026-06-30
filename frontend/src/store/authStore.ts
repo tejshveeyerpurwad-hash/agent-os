@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { User, LoginCredentials } from '@/types/user'
+import type { User, LoginCredentials, RegisterData } from '@/types/user'
 import { authService } from '@/services/auth'
 
 interface AuthStore {
@@ -8,7 +8,7 @@ interface AuthStore {
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
-  login: (credentials: LoginCredentials) => Promise<void>
+  login: (credentials: LoginCredentials | RegisterData) => Promise<void>
   logout: () => Promise<void>
   checkAuth: () => Promise<void>
   setUser: (user: User | null) => void

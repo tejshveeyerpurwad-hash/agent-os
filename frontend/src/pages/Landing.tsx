@@ -131,11 +131,11 @@ function Navbar() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-3">
-            <Link to={ROUTES.DASHBOARD}
+            <Link to={ROUTES.LOGIN}
               className="px-4 py-2 text-sm text-dark-300 hover:text-dark-100 transition-colors">
               Sign In
             </Link>
-            <Link to={ROUTES.DASHBOARD}
+            <Link to={ROUTES.REGISTER}
               className="group relative inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white 
                 bg-gradient-to-r from-primary-600 to-primary-500 rounded-xl overflow-hidden
                 hover:shadow-glow transition-shadow duration-300">
@@ -172,11 +172,11 @@ function Navbar() {
                 </a>
               ))}
               <div className="pt-4 border-t border-border flex flex-col gap-3">
-                <Link to={ROUTES.DASHBOARD} onClick={() => setMobileOpen(false)}
+                <Link to={ROUTES.LOGIN} onClick={() => setMobileOpen(false)}
                   className="text-sm text-dark-300 hover:text-dark-100 transition-colors py-2 focus-ring">
                   Sign In
                 </Link>
-                <Link to={ROUTES.DASHBOARD} onClick={() => setMobileOpen(false)}
+                <Link to={ROUTES.REGISTER} onClick={() => setMobileOpen(false)}
                   className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-medium text-white 
                     bg-gradient-to-r from-primary-600 to-primary-500 rounded-xl focus-ring">
                   Get Started <ArrowRight className="h-3.5 w-3.5" />
@@ -233,7 +233,7 @@ function Hero() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-12">
-              <Link to={ROUTES.DASHBOARD}
+              <Link to={ROUTES.REGISTER}
                 className="group relative inline-flex items-center gap-2.5 px-6 py-3.5 text-base font-medium text-white 
                   bg-gradient-to-r from-primary-600 to-primary-500 rounded-xl overflow-hidden
                   hover:shadow-glow transition-all duration-300">
@@ -767,7 +767,7 @@ function CTA() {
             Deploy your first agent in under 30 minutes.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to={ROUTES.DASHBOARD}
+            <Link to={ROUTES.REGISTER}
               className="group relative inline-flex items-center gap-2.5 px-8 py-4 text-base font-medium text-white 
                 bg-gradient-to-r from-primary-600 to-primary-500 rounded-xl overflow-hidden
                 hover:shadow-glow transition-all duration-300">
@@ -776,7 +776,7 @@ function CTA() {
               <div className="absolute inset-0 bg-gradient-to-r from-primary-500 to-accent-500 opacity-0 
                 group-hover:opacity-100 transition-opacity duration-300" />
             </Link>
-            <Link to={ROUTES.DASHBOARD}
+            <Link to={ROUTES.REGISTER}
               className="px-8 py-4 text-base font-medium text-dark-300 border border-border-light rounded-xl
                 hover:text-dark-100 hover:border-dark-500 transition-all duration-300">
               Talk to Sales
