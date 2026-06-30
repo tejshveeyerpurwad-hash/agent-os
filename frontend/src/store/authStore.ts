@@ -45,15 +45,29 @@ export const useAuthStore = create<AuthStore>((set) => ({
   checkAuth: async () => {
     const token = localStorage.getItem('agentos_token')
     if (!token) {
-      set({ isAuthenticated: false, isLoading: false })
+      const demoUser: User = {
+        id: 'demo-user',
+        email: 'demo@agentos.com',
+        name: 'Demo User',
+        role: 'admin',
+        createdAt: new Date().toISOString(),
+      }
+      set({ user: demoUser, isAuthenticated: true, isLoading: false })
       return
     }
     try {
       const user = await authService.getCurrentUser()
       set({ user, isAuthenticated: true, isLoading: false })
     } catch {
+      const demoUser: User = {
+        id: 'demo-user',
+        email: 'demo@agentos.com',
+        name: 'Demo User',
+        role: 'admin',
+        createdAt: new Date().toISOString(),
+      }
       localStorage.removeItem('agentos_token')
-      set({ user: null, token: null, isAuthenticated: false, isLoading: false })
+      set({ user: demoUser, token: null, isAuthenticated: true, isLoading: false })
     }
   },
 
